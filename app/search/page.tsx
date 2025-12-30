@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Input } from "@/components/ui/input";
 import { MainLayout } from "@/components/layout/main-layout";
-import { Search } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 import { useDebounce } from "@/hooks/use-debounce";
 import { INazo } from "@/models/nazo";
 
@@ -11,12 +11,14 @@ export default function SearchPage() {
   const [query, setQuery] = React.useState("");
   const [results, setResults] = React.useState<INazo[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [lastSearchedQuery, setLastSearchedQuery] = React.useState("");
   const debouncedQuery = useDebounce(query, 500);
 
   React.useEffect(() => {
     async function fetchResults() {
       if (!debouncedQuery) {
         setResults([]);
+        setLastSearchedQuery("");
         return;
       }
 
@@ -29,11 +31,20 @@ export default function SearchPage() {
         console.error("Failed to search:", error);
       } finally {
         setIsLoading(false);
+        setLastSearchedQuery(debouncedQuery);
       }
     }
 
     fetchResults();
   }, [debouncedQuery]);
+
+  // Determine if we are effectively loading.
+  // We are loading if:
+  // 1. query is different from debounced (waiting for debounce)
+  // 2. debounced is different from last searched (waiting for fetch to complete)
+  // 3. Explicit isLoading state (fetching)
+  // AND query is not empty.
+  const isSearching = query.length > 0 && (query !== debouncedQuery || debouncedQuery !== lastSearchedQuery || isLoading);
 
   return (
     <MainLayout>
@@ -50,11 +61,11 @@ export default function SearchPage() {
         </div>
 
         <div className="flex-1 overflow-y-auto min-h-0">
-          {isLoading ? (
+          {isSearching ? (
             <div className="flex items-center justify-center h-40">
-              <p className="text-muted-foreground">Searching...</p>
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
-          ) : results.length > 0 ? (
+          ) : results.length > 0 && query ? (
             <div className="grid gap-4">
               {results.map((nazo: any) => (
                 <div key={nazo._id} className="p-4 border rounded-lg bg-card text-card-foreground shadow-sm">
