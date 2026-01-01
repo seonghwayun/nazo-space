@@ -1,22 +1,36 @@
 "use client";
 
-import * as React from "react";
+import Link from "next/link";
 import Image from "next/image";
+import * as React from "react";
 import { Input } from "@/components/ui/input";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Search, Loader2, ImageIcon } from "lucide-react";
 import { useDebounce } from "@/hooks/use-debounce";
-import { INazo } from "@/models/nazo";
+import { useSearchContext } from "@/contexts/search-context";
 
 export default function SearchPage() {
-  const [query, setQuery] = React.useState("");
-  const [results, setResults] = React.useState<INazo[]>([]);
+  const {
+    query,
+    setQuery,
+    results,
+    setResults,
+    lastSearchedQuery,
+    setLastSearchedQuery,
+  } = useSearchContext();
+
   const [isLoading, setIsLoading] = React.useState(false);
-  const [lastSearchedQuery, setLastSearchedQuery] = React.useState("");
   const debouncedQuery = useDebounce(query, 500);
 
   React.useEffect(() => {
     async function fetchResults() {
+      // If we already have results matching our query (and no pending debounce change),
+      // we might want to skip fetching to preserve state.
+      // However, simplified logic: if debounced query matches last searched, don't fetch.
+      if (debouncedQuery === lastSearchedQuery && debouncedQuery) {
+        return;
+      }
+
       if (!debouncedQuery) {
         setResults([]);
         setLastSearchedQuery("");
@@ -37,15 +51,10 @@ export default function SearchPage() {
     }
 
     fetchResults();
-  }, [debouncedQuery]);
+  }, [debouncedQuery]); // Removed lastSearchedQuery from dep array to avoid loops, though strict mode logic might differ.
 
   // Determine if we are effectively loading.
-  // We are loading if:
-  // 1. query is different from debounced (waiting for debounce)
-  // 2. debounced is different from last searched (waiting for fetch to complete)
-  // 3. Explicit isLoading state (fetching)
-  // AND query is not empty.
-  const isSearching = query.length > 0 && (query !== debouncedQuery || debouncedQuery !== lastSearchedQuery || isLoading);
+  const isSearching = query.length > 0 && (query !== debouncedQuery || (debouncedQuery !== lastSearchedQuery && isLoading));
 
   return (
     <MainLayout>
@@ -69,27 +78,29 @@ export default function SearchPage() {
           ) : results.length > 0 && query ? (
             <div className="grid gap-4">
               {results.map((nazo: any) => (
-                <div key={nazo._id} className="flex gap-4 p-4 border rounded-lg bg-card text-card-foreground shadow-sm">
-                  <div className="relative shrink-0 w-20 h-20 bg-muted rounded-md overflow-hidden flex items-center justify-center">
-                    {nazo.imageUrl ? (
-                      <Image
-                        src={nazo.imageUrl}
-                        alt={nazo.originalTitle}
-                        fill
-                        className="object-cover"
-                      />
-                    ) : (
-                      <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
-                    )}
+                <Link key={nazo._id} href={`/nazo/${nazo._id}`} className="block">
+                  <div className="flex gap-4 p-4 border rounded-lg bg-card text-card-foreground shadow-sm hover:bg-accent/50 transition-colors">
+                    <div className="relative shrink-0 w-20 h-20 bg-muted rounded-md overflow-hidden flex items-center justify-center">
+                      {nazo.imageUrl ? (
+                        <Image
+                          src={nazo.imageUrl}
+                          alt={nazo.originalTitle}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-lg truncate">{nazo.originalTitle}</h3>
+                      {nazo.translatedTitle && (
+                        <p className="text-sm text-muted-foreground truncate">{nazo.translatedTitle}</p>
+                      )}
+                      {nazo.description && <p className="mt-2 text-sm line-clamp-2 text-muted-foreground">{nazo.description}</p>}
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-lg truncate">{nazo.originalTitle}</h3>
-                    {nazo.translatedTitle && (
-                      <p className="text-sm text-muted-foreground truncate">{nazo.translatedTitle}</p>
-                    )}
-                    {nazo.description && <p className="mt-2 text-sm line-clamp-2 text-muted-foreground">{nazo.description}</p>}
-                  </div>
-                </div>
+                </Link>
               ))}
             </div>
           ) : query ? (
