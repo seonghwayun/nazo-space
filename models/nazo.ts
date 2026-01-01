@@ -5,6 +5,8 @@ export interface INazo extends Document {
   description?: string;
   translatedTitle?: string;
   creators?: mongoose.Types.ObjectId[]; // References to 'Creator' collection
+  tags?: mongoose.Types.ObjectId[]; // References to 'Tag' collection
+  imageUrl?: string;
   difficulty?: number;
   estimatedTime?: string;
   createdAt: Date;
@@ -32,6 +34,16 @@ const NazoSchema: Schema = new Schema(
         ref: 'Creator', // Assumes a 'Creator' model will exist
       },
     ],
+    tags: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Tag',
+      },
+    ],
+    imageUrl: {
+      type: String,
+      trim: true,
+    },
     difficulty: {
       type: Number,
       min: 1,

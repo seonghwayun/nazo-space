@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { MainLayout } from "@/components/layout/main-layout";
-import { Search, Loader2 } from "lucide-react";
+import { Search, Loader2, ImageIcon } from "lucide-react";
 import { useDebounce } from "@/hooks/use-debounce";
 import { INazo } from "@/models/nazo";
 
@@ -68,12 +69,26 @@ export default function SearchPage() {
           ) : results.length > 0 && query ? (
             <div className="grid gap-4">
               {results.map((nazo: any) => (
-                <div key={nazo._id} className="p-4 border rounded-lg bg-card text-card-foreground shadow-sm">
-                  <h3 className="font-semibold text-lg">{nazo.originalTitle}</h3>
-                  {nazo.translatedTitle && (
-                    <p className="text-sm text-muted-foreground">{nazo.translatedTitle}</p>
-                  )}
-                  {nazo.description && <p className="mt-2 text-sm line-clamp-2">{nazo.description}</p>}
+                <div key={nazo._id} className="flex gap-4 p-4 border rounded-lg bg-card text-card-foreground shadow-sm">
+                  <div className="relative shrink-0 w-20 h-20 bg-muted rounded-md overflow-hidden flex items-center justify-center">
+                    {nazo.imageUrl ? (
+                      <Image
+                        src={nazo.imageUrl}
+                        alt={nazo.originalTitle}
+                        fill
+                        className="object-cover"
+                      />
+                    ) : (
+                      <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-lg truncate">{nazo.originalTitle}</h3>
+                    {nazo.translatedTitle && (
+                      <p className="text-sm text-muted-foreground truncate">{nazo.translatedTitle}</p>
+                    )}
+                    {nazo.description && <p className="mt-2 text-sm line-clamp-2 text-muted-foreground">{nazo.description}</p>}
+                  </div>
                 </div>
               ))}
             </div>
