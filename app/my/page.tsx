@@ -5,6 +5,7 @@ import { useSession, signIn, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Loader2, LogOut } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function MyPage() {
   const { data: session, status } = useSession();
@@ -60,6 +61,14 @@ export default function MyPage() {
             <p className="text-muted-foreground text-sm">{session.user?.email}</p>
           </div>
         </div>
+
+        {session.user?.isAdmin && (
+          <Link href="/admin" className="w-full">
+            <Button className="w-full" variant="default">
+              Manage Nazos (Admin)
+            </Button>
+          </Link>
+        )}
 
         <div className="space-y-4">
           {/* Future My Page Content */}

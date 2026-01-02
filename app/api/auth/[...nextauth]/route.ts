@@ -15,6 +15,11 @@ export const authOptions: any = {
     async session({ session, token }: any) {
       if (session.user && token.sub) {
         session.user.id = token.sub;
+
+        const adminEmails = (process.env.ADMIN_EMAILS || "").split(",").map(e => e.trim());
+        if (session.user.email && adminEmails.includes(session.user.email)) {
+          session.user.isAdmin = true;
+        }
       }
       return session;
     },

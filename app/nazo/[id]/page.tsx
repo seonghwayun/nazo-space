@@ -5,13 +5,15 @@ import Image from "next/image";
 import { useRouter, useParams } from "next/navigation";
 // import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ImageIcon, Loader2, PenTool, Share2, Plus, Edit3, Eye, MoreHorizontal, Star } from "lucide-react";
+import { ChevronLeft, ImageIcon, Loader2, PenTool, Share2, Plus, Edit3, Eye, MoreHorizontal, Star, Pencil } from "lucide-react";
 import { INazo } from "@/models/nazo";
 import { RatingModal } from "@/components/nazo/rating-modal";
 import { useSession } from "next-auth/react";
+import { NazoFormModal } from "@/components/admin/nazo-form-modal";
 
 // Helper to generate a consistent pastel color from a string
 function stringToColor(str: string) {
+  if (!str) return 'hsl(0, 0%, 90%)'; // Fallback color
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     hash = str.charCodeAt(i) + ((hash << 5) - hash);
@@ -28,14 +30,14 @@ function stringToColor(str: string) {
 
 export default function NazoDetailPage() {
   const router = useRouter();
-  const params = useParams();
-  const id = params.id as string;
+  const { id } = useParams();
   const [nazo, setNazo] = useState<INazo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { data: session } = useSession();
   const [userRate, setUserRate] = useState<number | null>(null);
   const [userReview, setUserReview] = useState<string>("");
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false); // Edit modal state
 
   useEffect(() => {
     async function fetchNazo() {
@@ -111,6 +113,24 @@ export default function NazoDetailPage() {
     }
   };
 
+  const handleUpdateNazo = async (data: any) => {
+    try {
+      const res = await fetch(`/api/nazo/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (!res.ok) throw new Error("Failed to update nazo");
+
+      const updatedNazo = await res.json();
+      setNazo((prev: any) => ({ ...prev, ...updatedNazo }));
+    } catch (error) {
+      console.error("Failed to update nazo:", error);
+      alert("Failed to update nazo");
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background">
@@ -131,8 +151,8 @@ export default function NazoDetailPage() {
   }
 
   return (
-    <div className="fixed inset-0 z-[100] bg-background overflow-y-auto">
-      <div className="flex flex-col min-h-screen pb-20">
+    <div className="bg-background min-h-full relative">
+      <div className="flex flex-col pb-20">
         {/* Hero Section */}
         <div className="relative w-full h-[45vh] md:h-[55vh] shrink-0">
           <Image
@@ -154,6 +174,20 @@ export default function NazoDetailPage() {
               <ChevronLeft className="!h-10 !w-10 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
             </Button>
           </div>
+
+          {session?.user?.isAdmin && (
+            <div className="absolute top-4 right-20 z-30">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white hover:bg-white/20 rounded-full h-14 w-14"
+                onClick={() => setIsEditModalOpen(true)}
+              >
+                <Pencil className="!h-6 !w-6 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
+              </Button>
+            </div>
+          )}
+
           <div className="absolute top-4 right-4 z-30">
             <Button
               variant="ghost"
@@ -263,6 +297,15 @@ export default function NazoDetailPage() {
         onRemove={handleRemoveRate}
         title="Rate this Nazo"
       />
-    </div>
+
+      {session?.user?.isAdmin && nazo && isEditModalOpen && (
+        <NazoFormModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          onSubmit={handleUpdateNazo}
+          initialData={nazo}
+          title="Edit Nazo"
+        />
+      )}    </div>
   );
 }

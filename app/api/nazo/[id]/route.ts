@@ -4,6 +4,9 @@ import Nazo from "@/models/nazo";
 import Tag from "@/models/tag"; // Ensure Tag model is registered
 import Creator from "@/models/creator"; // Ensure Creator model is registered
 
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -31,6 +34,36 @@ export async function GET(
     return NextResponse.json(nazo);
   } catch (error) {
     console.error("Failed to fetch nazo:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+}
+
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || !(session as any).user.isAdmin) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { id } = await params;
+    const body = await req.json();
+    await dbConnect();
+
+    const updatedNazo = await Nazo.findByIdAndUpdate(id, body, {
+      new: true,
+      runValidators: true,
+    }).populate("tags").populate("creators");
+
+    if (!updatedNazo) {
+      return NextResponse.json({ error: "Nazo not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(updatedNazo);
+  } catch (error) {
+    console.error("Failed to update nazo:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
