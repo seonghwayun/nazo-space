@@ -22,7 +22,7 @@ export async function POST(request: Request): Promise<NextResponse> {
           tokenPayload: JSON.stringify({
             // optional, sent to your server on upload completion
             // handleUpload doesn't seem to expose a direct way to use this yet in common examples, but good to have structure
-            userId: (session.user as any).id,
+            userId: (session as any).user.id,
           }),
         };
       },
