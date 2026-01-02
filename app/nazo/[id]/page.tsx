@@ -94,6 +94,23 @@ export default function NazoDetailPage() {
     }
   };
 
+  const handleRemoveRate = async () => {
+    if (!id) return;
+    try {
+      const res = await fetch(`/api/review/nazo/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) throw new Error("Failed to delete review");
+
+      setUserRate(null);
+      setUserReview("");
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-background pt-16">
@@ -134,7 +151,7 @@ export default function NazoDetailPage() {
               className="text-white hover:bg-white/20 rounded-full h-14 w-14"
               onClick={() => router.back()}
             >
-              <ChevronLeft className="!h-10 !w-10" />
+              <ChevronLeft className="!h-10 !w-10 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
             </Button>
           </div>
           <div className="absolute top-4 right-4 z-30">
@@ -143,7 +160,7 @@ export default function NazoDetailPage() {
               size="icon"
               className="text-white hover:bg-white/20 rounded-full h-14 w-14"
             >
-              <Share2 className="!h-8 !w-8" />
+              <Share2 className="!h-8 !w-8 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
             </Button>
           </div>
 
@@ -243,6 +260,7 @@ export default function NazoDetailPage() {
         initialRate={userRate || 0}
         initialReview={userReview}
         onSave={handleSaveRate}
+        onRemove={handleRemoveRate}
         title="Rate this Nazo"
       />
     </div>

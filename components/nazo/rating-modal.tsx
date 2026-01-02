@@ -11,6 +11,7 @@ interface RatingModalProps {
   initialRate?: number;
   initialReview?: string;
   onSave: (rate: number, review: string) => Promise<void>;
+  onRemove?: () => Promise<void>;
   title?: string;
 }
 
@@ -20,12 +21,14 @@ export function RatingModal({
   initialRate = 0,
   initialReview = "",
   onSave,
+  onRemove,
   title = "Rate this content",
 }: RatingModalProps) {
   const [rate, setRate] = useState(initialRate);
   const [hoverRate, setHoverRate] = useState<number | null>(null);
   const [review, setReview] = useState(initialReview);
   const [isSaving, setIsSaving] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -60,6 +63,19 @@ export function RatingModal({
     }
   };
 
+  const handleRemove = async () => {
+    if (!onRemove) return;
+    setIsRemoving(true);
+    try {
+      await onRemove();
+      onClose();
+    } catch (error) {
+      console.error("Failed to remove rating:", error);
+    } finally {
+      setIsRemoving(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
       <div
@@ -91,7 +107,7 @@ export function RatingModal({
                 onMouseLeave={() => setHoverRate(null)}
               >
                 {/* Background Star (Gray) */}
-                <Star className="absolute inset-0 w-full h-full text-muted/30 fill-muted/30" />
+                <Star className="absolute inset-0 w-full h-full text-muted-foreground/30 fill-muted-foreground/30" />
 
                 {/* Foreground Star (Yellow/Primary) - Clipped */}
                 <div
@@ -119,13 +135,25 @@ export function RatingModal({
 
         {/* Optional Review Textarea could go here if needed, but keeping it simple for now as per prompt "small modal" */}
 
-        <Button
-          className="w-full"
-          onClick={handleSave}
-          disabled={isSaving}
-        >
-          {isSaving ? "Saving..." : "Save Rating"}
-        </Button>
+        <div className="space-y-2">
+          <Button
+            className="w-full"
+            onClick={handleSave}
+            disabled={isSaving || isRemoving}
+          >
+            {isSaving ? "Saving..." : "Save Rating"}
+          </Button>
+          {onRemove && initialRate > 0 && (
+            <Button
+              variant="ghost"
+              className="w-full text-red-500 hover:text-red-600 hover:bg-red-50"
+              onClick={handleRemove}
+              disabled={isSaving || isRemoving}
+            >
+              {isRemoving ? "Removing..." : "Remove Rating"}
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

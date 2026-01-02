@@ -68,3 +68,33 @@ export async function POST(
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ nazoId: string }> }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || !(session as any).user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { nazoId } = await params;
+    await connectToDatabase();
+
+    await Review.updateOne(
+      {
+        userId: (session as any).user.id,
+        nazoId: nazoId,
+      },
+      {
+        $set: { rate: 0 }
+      }
+    );
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Error deleting review:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+}
