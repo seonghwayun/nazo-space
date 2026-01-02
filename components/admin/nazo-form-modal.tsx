@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { upload } from "@vercel/blob/client";
 
 interface Creator {
   _id: string;
@@ -45,6 +46,9 @@ export function NazoFormModal({
     creators: [],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [useFileUpload, setUseFileUpload] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Creator Search State
   const [creatorQuery, setCreatorQuery] = useState("");
@@ -77,6 +81,8 @@ export function NazoFormModal({
       }
       setCreatorQuery("");
       setCreatorResults([]);
+      setUseFileUpload(false);
+      setFile(null);
     }
   }, [isOpen, initialData]);
 
@@ -114,6 +120,12 @@ export function NazoFormModal({
     }));
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+    }
+  };
+
   const handleAddCreator = (creator: Creator) => {
     setFormData(prev => {
       if (prev.creators.some(c => c._id === creator._id)) return prev;
@@ -134,15 +146,29 @@ export function NazoFormModal({
     e.preventDefault();
     setIsSubmitting(true);
     try {
+      let finalImageUrl = formData.imageUrl;
+
+      if (useFileUpload && file) {
+        setIsUploading(true);
+        const newBlob = await upload(file.name, file, {
+          access: 'public',
+          handleUploadUrl: '/api/upload',
+        });
+        finalImageUrl = newBlob.url;
+        setIsUploading(false);
+      }
+
       // Transform creators to array of IDs
       const payload = {
         ...formData,
+        imageUrl: finalImageUrl,
         creators: formData.creators.map(c => c._id),
       };
       await onSubmit(payload);
       onClose();
     } catch (error) {
       console.error("Submit failed", error);
+      setIsUploading(false);
     } finally {
       setIsSubmitting(false);
     }
@@ -233,13 +259,42 @@ export function NazoFormModal({
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Image URL</label>
-            <Input
-              name="imageUrl"
-              value={formData.imageUrl}
-              onChange={handleChange}
-              placeholder="https://example.com/image.jpg"
-            />
+            <div className="flex justify-between items-center mb-1">
+              <label className="text-sm font-medium">Image</label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-6 text-xs px-2"
+                onClick={() => setUseFileUpload(!useFileUpload)}
+              >
+                {useFileUpload ? "Use URL instead" : "Upload File instead"}
+              </Button>
+            </div>
+
+            {useFileUpload ? (
+              <div className="space-y-2">
+                <Input
+                  type="file"
+                  onChange={handleFileChange}
+                  accept="image/*"
+                  disabled={isUploading}
+                />
+                {isUploading && <p className="text-xs text-muted-foreground">Uploading image...</p>}
+              </div>
+            ) : (
+              <Input
+                name="imageUrl"
+                value={formData.imageUrl}
+                onChange={handleChange}
+                placeholder="https://example.com/image.jpg"
+              />
+            )}
+            <p className="text-xs text-muted-foreground">
+              {useFileUpload
+                ? "Supported: .jpg, .png, .gif, .webp"
+                : "Enter a direct URL to an image hosted elsewhere."}
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -269,7 +324,7 @@ export function NazoFormModal({
             <Button type="button" variant="ghost" onClick={onClose} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting || (useFileUpload && !file && !formData.imageUrl)}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save
             </Button>
