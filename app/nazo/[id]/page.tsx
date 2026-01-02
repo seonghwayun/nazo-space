@@ -3,10 +3,12 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter, useParams } from "next/navigation";
-import { MainLayout } from "@/components/layout/main-layout";
+// import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ImageIcon, Loader2, PenTool } from "lucide-react";
+import { ChevronLeft, ImageIcon, Loader2, PenTool, Share2, Plus, Edit3, Eye, MoreHorizontal, Star } from "lucide-react";
 import { INazo } from "@/models/nazo";
+import { RatingModal } from "@/components/nazo/rating-modal";
+import { useSession } from "next-auth/react";
 
 // Helper to generate a consistent pastel color from a string
 function stringToColor(str: string) {
@@ -30,11 +32,16 @@ export default function NazoDetailPage() {
   const id = params.id as string;
   const [nazo, setNazo] = useState<INazo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { data: session } = useSession();
+  const [userRate, setUserRate] = useState<number | null>(null);
+  const [userReview, setUserReview] = useState<string>("");
+  const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
 
   useEffect(() => {
     async function fetchNazo() {
       if (!id) return;
       try {
+        // ... existing fetchNazo logic ...
         const res = await fetch(`/api/nazo/${id}`);
         if (!res.ok) throw new Error("Failed to fetch nazo");
         const data = await res.json();
@@ -48,147 +55,196 @@ export default function NazoDetailPage() {
     fetchNazo();
   }, [id]);
 
+  useEffect(() => {
+    async function fetchReview() {
+      if (!id || !session?.user) return;
+      try {
+        const res = await fetch(`/api/review/nazo/${id}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data) {
+            setUserRate(data.rate);
+            setUserReview(data.review || "");
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch review", error);
+      }
+    }
+    fetchReview();
+  }, [id, session]);
+
+  const handleSaveRate = async (rate: number, review: string) => {
+    if (!id) return;
+    try {
+      const res = await fetch(`/api/review/nazo/${id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rate, review }),
+      });
+
+      if (!res.ok) throw new Error("Failed to save review");
+
+      const data = await res.json();
+      setUserRate(data.rate);
+      setUserReview(data.review || "");
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  };
+
   if (isLoading) {
     return (
-      <MainLayout>
-        <div className="flex items-center justify-center h-full">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-      </MainLayout>
+      <div className="flex items-center justify-center h-screen bg-background pt-16">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
     );
   }
 
   if (!nazo) {
     return (
-      <MainLayout>
-        <div className="flex flex-col items-center justify-center h-full gap-4">
-          <p className="text-muted-foreground">Nazo not found.</p>
-          <Button variant="outline" onClick={() => router.back()}>
-            Go Back
-          </Button>
-        </div>
-      </MainLayout>
+      <div className="flex flex-col items-center justify-center h-screen bg-background gap-4 pt-16">
+        <p className="text-muted-foreground">Nazo not found.</p>
+        <Button variant="outline" onClick={() => router.back()}>
+          Go Back
+        </Button>
+      </div>
     );
   }
 
   return (
-    <MainLayout>
-      <div className="flex flex-col h-full bg-background">
-        {/* Header with Back Button */}
-        <div className="sticky top-0 z-10 flex items-center p-4 bg-background border-b shrink-0">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.back()} // Go back to preserve history
-            className="mr-2"
-          >
-            <ChevronLeft className="h-6 w-6" />
-          </Button>
-          <h1 className="text-lg font-semibold truncate flex-1 min-w-0">
-            {nazo.originalTitle}
-          </h1>
-        </div>
+    <div className="fixed inset-0 z-[100] bg-background overflow-y-auto">
+      <div className="flex flex-col min-h-screen pb-20">
+        {/* Hero Section */}
+        <div className="relative w-full h-[45vh] md:h-[55vh] shrink-0">
+          <Image
+            src={nazo.imageUrl || "/placeholder.png"}
+            alt={nazo.originalTitle}
+            fill
+            className="object-cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
 
-        <div className="flex-1 overflow-y-auto w-full">
-          <div className="max-w-2xl mx-auto w-full p-4 space-y-6">
-            {/* Image Section */}
-            <div className="relative aspect-video w-full bg-muted rounded-lg overflow-hidden flex items-center justify-center shadow-sm">
-              {nazo.imageUrl ? (
-                <Image
-                  src={nazo.imageUrl}
-                  alt={nazo.originalTitle}
-                  fill
-                  className="object-cover"
-                  priority
-                />
-              ) : (
-                <ImageIcon className="h-16 w-16 text-muted-foreground/30" />
-              )}
+          <div className="absolute top-4 left-4 z-30">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white hover:bg-white/20 rounded-full h-14 w-14"
+              onClick={() => router.back()}
+            >
+              <ChevronLeft className="!h-10 !w-10" />
+            </Button>
+          </div>
+          <div className="absolute top-4 right-4 z-30">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white hover:bg-white/20 rounded-full h-14 w-14"
+            >
+              <Share2 className="!h-8 !w-8" />
+            </Button>
+          </div>
+
+          <div className="absolute bottom-0 left-0 w-full p-6 pt-12">
+            <h1 className="text-3xl font-bold text-foreground mb-2">{nazo.originalTitle}</h1>
+            <div className="text-sm text-muted-foreground flex flex-wrap gap-2 items-center mb-1">
+              <span>{nazo.difficulty ? `Difficulty ${nazo.difficulty}` : "Puzzle"}</span>
+              <span>•</span>
+              <span>{nazo.estimatedTime || "Untimed"}</span>
             </div>
-
-            {/* Title & Description & Creators */}
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <h2 className="text-2xl font-bold break-words">{nazo.originalTitle}</h2>
-                {nazo.translatedTitle && (
-                  <p className="text-muted-foreground text-lg">{nazo.translatedTitle}</p>
-                )}
-              </div>
-
-              {/* Creators Section */}
-              {nazo.creators && nazo.creators.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {(nazo.creators as any[]).map((creator) => {
-                    const bgColor = stringToColor(creator._id || creator.name);
-                    const Content = (
-                      <div
-                        className="flex items-center gap-2 px-3 py-1.5 border rounded-full transition-colors shadow-sm hover:brightness-95"
-                        style={{ backgroundColor: bgColor, borderColor: 'transparent' }} // Override background
-                      >
-                        <div className="p-1 rounded-full bg-white/50">
-                          <PenTool className="h-3 w-3 text-foreground/70" />
-                        </div>
-                        <span className="text-sm font-medium text-foreground/80">{creator.name}</span>
-                      </div>
-                    );
-
-                    return creator.url ? (
-                      <a
-                        key={creator._id}
-                        href={creator.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="no-underline"
-                      >
-                        {Content}
-                      </a>
-                    ) : (
-                      <div key={creator._id}>{Content}</div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* Tags */}
-            {nazo.tags && nazo.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {nazo.tags.map((tag: any) => (
-                  <span
-                    key={tag._id}
-                    className="px-2.5 py-0.5 rounded-full bg-secondary text-secondary-foreground text-sm font-medium"
-                  >
-                    #{tag.name}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {/* Main Description */}
-            {nazo.description && (
-              <div className="prose prose-sm dark:prose-invert max-w-none">
-                <p className="whitespace-pre-wrap leading-relaxed">{nazo.description}</p>
-              </div>
-            )}
-
-            {/* Metadata Grid */}
-            <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-              {nazo.difficulty && (
-                <div>
-                  <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Difficulty</span>
-                  <p className="font-medium">{nazo.difficulty} / 10</p>
-                </div>
-              )}
-              {nazo.estimatedTime && (
-                <div>
-                  <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Est. Time</span>
-                  <p className="font-medium">{nazo.estimatedTime}</p>
-                </div>
+            <div className="text-xs text-muted-foreground">
+              {nazo.tags && nazo.tags.length > 0 && (
+                <span>{nazo.tags.map(t => (typeof t === 'object' && 'name' in t ? (t as any).name : t)).join(' · ')}</span>
               )}
             </div>
           </div>
         </div>
+
+
+
+        {/* Action Buttons Row */}
+        <div className="px-4 py-4 flex justify-around items-center border-b border-border">
+          <button className="flex flex-col items-center gap-1 min-w-[60px] text-muted-foreground hover:text-foreground">
+            <Plus className="h-6 w-6" />
+            <span className="text-[10px]">Want to</span>
+          </button>
+          <button className="flex flex-col items-center gap-1 min-w-[60px] text-muted-foreground hover:text-foreground">
+            <Edit3 className="h-6 w-6" />
+            <span className="text-[10px]">Comment</span>
+          </button>
+          <button
+            className="flex flex-col items-center gap-1 min-w-[60px] text-muted-foreground hover:text-foreground"
+            onClick={() => setIsRatingModalOpen(true)}
+          >
+            {userRate ? (
+              <>
+                <Star className="h-6 w-6 text-yellow-400 fill-yellow-400" />
+                <span className="text-[10px] font-bold text-foreground">{userRate}</span>
+              </>
+            ) : (
+              <>
+                <Star className="h-6 w-6" />
+                <span className="text-[10px]">Rate</span>
+              </>
+            )}
+          </button>
+          <button className="flex flex-col items-center gap-1 min-w-[60px] text-muted-foreground hover:text-foreground">
+            <MoreHorizontal className="h-6 w-6" />
+            <span className="text-[10px]">More</span>
+          </button>
+        </div>
+
+        {/* Content Section */}
+        <div className="p-6 space-y-6">
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold text-muted-foreground">Description</h3>
+            <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90">{nazo.description}</p>
+          </div>
+
+          {nazo.creators && nazo.creators.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-muted-foreground">Creators</h3>
+              <div className="flex flex-wrap gap-2">
+                {nazo.creators.map((creator: any) => {
+                  const bgColor = stringToColor(creator._id || creator.name);
+                  return creator.url ? (
+                    <a
+                      key={creator._id}
+                      href={creator.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-black/5 hover:opacity-80 transition-opacity"
+                      style={{ backgroundColor: bgColor }}
+                    >
+                      <PenTool className="h-3 w-3 opacity-60" />
+                      <span className="text-sm font-medium">{creator.name}</span>
+                    </a>
+                  ) : (
+                    <div
+                      key={creator._id}
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-black/5"
+                      style={{ backgroundColor: bgColor }}
+                    >
+                      <PenTool className="h-3 w-3 opacity-60" />
+                      <span className="text-sm font-medium">{creator.name}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-    </MainLayout>
+      <RatingModal
+        isOpen={isRatingModalOpen}
+        onClose={() => setIsRatingModalOpen(false)}
+        initialRate={userRate || 0}
+        initialReview={userReview}
+        onSave={handleSaveRate}
+        title="Rate this Nazo"
+      />
+    </div>
   );
 }

@@ -32,7 +32,7 @@ export function BottomNav() {
   ];
 
   return (
-    <nav className="shrink-0 z-50 bg-background/80 backdrop-blur-lg border-t supports-[backdrop-filter]:bg-background/60">
+    <nav className="shrink-0 z-50 bg-background/80 backdrop-blur-lg border-t supports-[backdrop-filter]:bg-background/60 pb-[env(safe-area-inset-bottom)]">
       <div className="flex items-center justify-around h-16 max-w-screen-md mx-auto">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
