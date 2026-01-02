@@ -81,16 +81,12 @@ export default function SearchPage() {
                 <Link key={nazo._id} href={`/nazo/${nazo._id}`} className="block">
                   <div className="flex gap-4 p-4 border rounded-lg bg-card text-card-foreground shadow-sm hover:bg-accent/50 transition-colors">
                     <div className="relative shrink-0 w-20 h-20 bg-muted rounded-md overflow-hidden flex items-center justify-center">
-                      {nazo.imageUrl ? (
-                        <Image
-                          src={nazo.imageUrl}
-                          alt={nazo.originalTitle}
-                          fill
-                          className="object-cover"
-                        />
-                      ) : (
-                        <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
-                      )}
+                      <Image
+                        src={nazo.imageUrl || `/api/image/${nazo._id}`}
+                        alt={nazo.originalTitle}
+                        fill
+                        className="object-cover"
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-lg truncate">{nazo.originalTitle}</h3>

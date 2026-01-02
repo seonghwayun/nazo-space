@@ -64,8 +64,8 @@ export default function MyPage() {
         <div className="space-y-4">
           {/* Future My Page Content */}
           <div className="p-4 border rounded-lg bg-muted/30">
-            <h3 className="font-semibold mb-2">My Puzzles</h3>
-            <p className="text-sm text-muted-foreground">You haven't solved any puzzles yet.</p>
+            <h3 className="font-semibold mb-2">My Nazos</h3>
+            <p className="text-sm text-muted-foreground">You haven't solved any nazos yet.</p>
           </div>
         </div>
 

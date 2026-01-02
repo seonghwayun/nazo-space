@@ -113,7 +113,7 @@ export default function NazoDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-background pt-16">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
@@ -121,7 +121,7 @@ export default function NazoDetailPage() {
 
   if (!nazo) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-background gap-4 pt-16">
+      <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background gap-4">
         <p className="text-muted-foreground">Nazo not found.</p>
         <Button variant="outline" onClick={() => router.back()}>
           Go Back
@@ -136,7 +136,7 @@ export default function NazoDetailPage() {
         {/* Hero Section */}
         <div className="relative w-full h-[45vh] md:h-[55vh] shrink-0">
           <Image
-            src={nazo.imageUrl || "/placeholder.png"}
+            src={nazo.imageUrl || `/api/image/${nazo._id}`}
             alt={nazo.originalTitle}
             fill
             className="object-cover"
