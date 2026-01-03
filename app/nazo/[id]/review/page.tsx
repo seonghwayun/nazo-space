@@ -111,12 +111,14 @@ export default function NazoReviewPage() {
     <div className="min-h-screen bg-background p-4 md:p-8 pb-40 flex flex-col max-w-2xl mx-auto relative">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
-        <Button variant="ghost" size="icon" onClick={() => router.back()}>
-          <ChevronLeft className="h-6 w-6" />
+        <Button
+          variant="ghost"
+          size="icon"
+          className="rounded-full h-14 w-14 hover:bg-muted"
+          onClick={() => router.back()}
+        >
+          <ChevronLeft className="!h-10 !w-10" />
         </Button>
-        <div className="flex-1">
-          <h1 className="text-lg font-bold truncate">Reviewing: {nazo.originalTitle}</h1>
-        </div>
       </div>
 
       {/* Brief Nazo Info */}
@@ -174,8 +176,7 @@ export default function NazoReviewPage() {
       </div>
 
       {/* Actions */}
-      {/* Actions */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background border-t p-4 pb-8 z-20">
+      <div className="fixed bottom-0 left-0 right-0 bg-background border-t p-4 pb-12 z-20">
         <div className="max-w-2xl mx-auto space-y-3">
           <Button
             className="w-full h-12 text-base font-semibold"

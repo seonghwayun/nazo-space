@@ -18,6 +18,7 @@ export function NazoPortraitCard({ nazo, rank }: NazoPortraitCardProps) {
             src={nazo.imageUrl || `/api/image/${nazo._id}`}
             alt={nazo.originalTitle}
             fill
+            sizes="160px"
             className="object-cover group-hover:scale-105 transition-transform duration-300"
           />
           {rank && (
