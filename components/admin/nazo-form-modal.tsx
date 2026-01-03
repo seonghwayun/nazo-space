@@ -16,7 +16,7 @@ interface NazoFormData {
   translatedTitle: string;
   description: string;
   imageUrl: string;
-  difficulty: number;
+  difficulty: string;
   estimatedTime: string;
   creators: Creator[];
 }
@@ -41,7 +41,7 @@ export function NazoFormModal({
     translatedTitle: "",
     description: "",
     imageUrl: "",
-    difficulty: 1,
+    difficulty: "",
     estimatedTime: "",
     creators: [],
   });
@@ -63,7 +63,7 @@ export function NazoFormModal({
           translatedTitle: initialData.translatedTitle || "",
           description: initialData.description || "",
           imageUrl: initialData.imageUrl || "",
-          difficulty: initialData.difficulty || 1,
+          difficulty: initialData.difficulty ? String(initialData.difficulty) : "",
           estimatedTime: initialData.estimatedTime || "",
           creators: initialData.creators || [],
         });
@@ -74,7 +74,7 @@ export function NazoFormModal({
           translatedTitle: "",
           description: "",
           imageUrl: "",
-          difficulty: 1,
+          difficulty: "",
           estimatedTime: "",
           creators: [],
         });
@@ -116,7 +116,7 @@ export function NazoFormModal({
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "difficulty" ? parseInt(value) || 0 : value,
+      [name]: value,
     }));
   };
 
@@ -299,14 +299,12 @@ export function NazoFormModal({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Difficulty (1-10)</label>
+              <label className="text-sm font-medium">Difficulty</label>
               <Input
-                type="number"
                 name="difficulty"
-                min={1}
-                max={10}
                 value={formData.difficulty}
                 onChange={handleChange}
+                placeholder="e.g. Easy, 5, Hard"
               />
             </div>
             <div className="space-y-2">

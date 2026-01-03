@@ -7,7 +7,7 @@ export interface INazo extends Document {
   creators?: mongoose.Types.ObjectId[]; // References to 'Creator' collection
   tags?: mongoose.Types.ObjectId[]; // References to 'Tag' collection
   imageUrl?: string;
-  difficulty?: number;
+  difficulty?: string;
   estimatedTime?: string;
   averageRate?: number;
   rateCount?: number;
@@ -48,9 +48,8 @@ const NazoSchema: Schema = new Schema(
       trim: true,
     },
     difficulty: {
-      type: Number,
-      min: 1,
-      max: 10, // Assuming a 1-10 scale, adjustable
+      type: String,
+      trim: true,
     },
     averageRate: {
       type: Number,

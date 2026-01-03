@@ -223,12 +223,17 @@ export default function NazoDetailPage() {
 
           <div className="absolute bottom-0 left-0 w-full p-6 pt-12">
             <h1 className="text-3xl font-bold text-foreground mb-2">{nazo.originalTitle}</h1>
-            <div className="text-sm text-muted-foreground flex flex-wrap gap-2 items-center mb-1">
-              <span>{nazo.difficulty ? `Difficulty ${nazo.difficulty}` : "Puzzle"}</span>
+            <div className="text-sm flex flex-wrap gap-2 items-center mb-1">
+              <span>
+                평균평점 <span className="font-bold">{nazo.averageRate ? nazo.averageRate.toFixed(1) : "0.0"}</span>
+                <span className="text-muted-foreground ml-1 font-normal">({nazo.rateCount || 0})</span>
+              </span>
+              <span>•</span>
+              <span>표기난이도 <span className="font-bold">{nazo.difficulty ? nazo.difficulty : "없음"}</span></span>
               <span>•</span>
               <span>{nazo.estimatedTime || "Untimed"}</span>
             </div>
-            <div className="text-xs text-muted-foreground">
+            <div className="text-xs text-muted-foreground mb-1">
               {nazo.tags && nazo.tags.length > 0 && (
                 <span>{nazo.tags.map(t => (typeof t === 'object' && 'name' in t ? (t as any).name : t)).join(' · ')}</span>
               )}
