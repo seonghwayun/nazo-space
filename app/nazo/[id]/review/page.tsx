@@ -110,19 +110,30 @@ export default function NazoReviewPage() {
   return (
     <div className="min-h-screen bg-background p-4 md:p-8 pb-40 flex flex-col max-w-2xl mx-auto relative">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
+      <div className="fixed top-0 left-0 right-0 h-14 bg-background border-b z-50 flex items-center justify-between px-4">
         <Button
           variant="ghost"
-          size="icon"
-          className="rounded-full h-14 w-14 hover:bg-muted"
+          className="text-base font-medium px-0 hover:bg-transparent text-foreground"
           onClick={() => router.back()}
         >
-          <ChevronLeft className="!h-10 !w-10" />
+          취소
+        </Button>
+        <span className="text-base font-bold">리뷰 작성</span>
+        <Button
+          variant="ghost"
+          className="text-base font-medium px-0 hover:bg-transparent text-primary"
+          onClick={handleSave}
+          disabled={isSaving}
+        >
+          {isSaving ? "저장 중..." : "확인"}
         </Button>
       </div>
 
+      {/* Spacer for fixed header */}
+      <div className="h-14" />
+
       {/* Brief Nazo Info */}
-      <div className="flex gap-4 p-4 border rounded-lg bg-card text-card-foreground shadow-sm mb-8">
+      <div className="flex gap-4 p-4 border rounded-lg bg-card text-card-foreground shadow-sm mb-8 mt-4">
         <div className="relative shrink-0 w-16 h-16 bg-muted rounded-md overflow-hidden">
           <Image
             src={nazo.imageUrl || `/api/image/${nazo._id}`}
@@ -139,7 +150,7 @@ export default function NazoReviewPage() {
 
 
       {/* Form Fields */}
-      <div className="space-y-8 flex-1">
+      <div className="space-y-8 flex-1 pb-10">
         {/* Public Review Section */}
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-base font-medium text-foreground">
@@ -173,20 +184,10 @@ export default function NazoReviewPage() {
             className="min-h-[100px] resize-y text-base p-4"
           />
         </div>
-      </div>
 
-      {/* Actions */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background border-t p-4 pb-12 z-20">
-        <div className="max-w-2xl mx-auto space-y-3">
-          <Button
-            className="w-full h-12 text-base font-semibold"
-            onClick={handleSave}
-            disabled={isSaving || isRemoving}
-          >
-            {isSaving ? "Saving..." : "Save Review"}
-          </Button>
-
-          {(review || memo) && (
+        {/* Delete Action - Moved to content flow */}
+        {(review || memo) && (
+          <div className="pt-4 border-t">
             <Button
               variant="ghost"
               className="w-full text-red-500 hover:text-red-600 hover:bg-red-50"
@@ -195,8 +196,8 @@ export default function NazoReviewPage() {
             >
               {isRemoving ? "Removing..." : "Delete Review & Memo"}
             </Button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
