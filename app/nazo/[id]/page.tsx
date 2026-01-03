@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRouter, useParams } from "next/navigation";
 // import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ImageIcon, Loader2, PenTool, Share2, Plus, Edit3, Eye, MoreHorizontal, Star, Pencil } from "lucide-react";
+import { ChevronLeft, ImageIcon, Loader2, PenTool, Share2, Plus, Edit3, Eye, MoreHorizontal, Star, Pencil, Globe } from "lucide-react";
 import { INazo } from "@/models/nazo";
 import { RatingModal } from "@/components/nazo/rating-modal";
 import { useSession } from "next-auth/react";
@@ -36,6 +36,7 @@ export default function NazoDetailPage() {
   const { data: session } = useSession();
   const [userRate, setUserRate] = useState<number | null>(null);
   const [userReview, setUserReview] = useState<string>("");
+  const [userMemo, setUserMemo] = useState<string>(""); // Added memo state
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false); // Edit modal state
 
@@ -70,6 +71,7 @@ export default function NazoDetailPage() {
           const data = await reviewRes.json();
           if (data) {
             setUserReview(data.review || "");
+            setUserMemo(data.memo || "");
           }
         }
 
@@ -86,7 +88,7 @@ export default function NazoDetailPage() {
     fetchUserData();
   }, [id, session]);
 
-  const handleSaveRate = async (rate: number, review: string) => {
+  const handleSaveRate = async (rate: number) => {
     if (!id) return;
     try {
       // Save Rate
@@ -99,25 +101,13 @@ export default function NazoDetailPage() {
       if (!rateRes.ok) throw new Error("Failed to save rate");
       const rateData = await rateRes.json();
       setUserRate(rateData.rate);
-
-      // Save Review (only if content exists or we want to update it)
-      // The modal passes both, so we update both.
-      if (review !== undefined) {
-        const reviewRes = await fetch(`/api/review/nazo/${id}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ review }),
-        });
-        if (!reviewRes.ok) throw new Error("Failed to save review");
-        const reviewData = await reviewRes.json();
-        setUserReview(reviewData.review || "");
-      }
-
     } catch (error) {
       console.error(error);
       throw error;
     }
   };
+
+
 
   const handleRemoveRate = async () => {
     if (!id) return;
@@ -129,12 +119,13 @@ export default function NazoDetailPage() {
       if (!res.ok) throw new Error("Failed to delete rate");
 
       setUserRate(null);
-      // We do NOT remove the review text when removing the rating, based on the previous separation logic
     } catch (error) {
       console.error(error);
       throw error;
     }
   };
+
+
 
   const handleUpdateNazo = async (data: any) => {
     try {
@@ -249,9 +240,12 @@ export default function NazoDetailPage() {
             <Plus className="h-6 w-6" />
             <span className="text-[10px]">Want to</span>
           </button>
-          <button className="flex flex-col items-center gap-1 min-w-[60px] text-muted-foreground hover:text-foreground">
+          <button
+            className="flex flex-col items-center gap-1 min-w-[60px] text-muted-foreground hover:text-foreground"
+            onClick={() => router.push(`/nazo/${id}/review`)}
+          >
             <Edit3 className="h-6 w-6" />
-            <span className="text-[10px]">Comment</span>
+            <span className="text-[10px]">Review</span>
           </button>
           <button
             className="flex flex-col items-center gap-1 min-w-[60px] text-muted-foreground hover:text-foreground"
@@ -277,6 +271,16 @@ export default function NazoDetailPage() {
 
         {/* Content Section */}
         <div className="p-6 space-y-6">
+          {userReview && (
+            <div className="space-y-2 p-4 bg-muted/30 rounded-lg border border-border">
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <Globe className="h-4 w-4 text-blue-500" />
+                내 리뷰
+              </h3>
+              <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90">{userReview}</p>
+            </div>
+          )}
+
           <div className="space-y-2">
             <h3 className="text-sm font-semibold text-muted-foreground">Description</h3>
             <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90">{nazo.description}</p>
@@ -320,11 +324,11 @@ export default function NazoDetailPage() {
         isOpen={isRatingModalOpen}
         onClose={() => setIsRatingModalOpen(false)}
         initialRate={userRate || 0}
-        initialReview={userReview}
-        onSave={handleSaveRate}
+        onSave={async (rate) => { await handleSaveRate(rate); }}
         onRemove={handleRemoveRate}
         title="Rate this Nazo"
       />
+
 
       {session?.user?.isAdmin && nazo && isEditModalOpen && (
         <NazoFormModal
