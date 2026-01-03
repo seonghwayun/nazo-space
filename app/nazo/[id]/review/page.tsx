@@ -108,7 +108,7 @@ export default function NazoReviewPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8 flex flex-col max-w-2xl mx-auto">
+    <div className="min-h-screen bg-background p-4 md:p-8 pb-40 flex flex-col max-w-2xl mx-auto relative">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <Button variant="ghost" size="icon" onClick={() => router.back()}>
@@ -174,25 +174,28 @@ export default function NazoReviewPage() {
       </div>
 
       {/* Actions */}
-      <div className="mt-8 space-y-3 pb-8">
-        <Button
-          className="w-full h-12 text-base font-semibold"
-          onClick={handleSave}
-          disabled={isSaving || isRemoving}
-        >
-          {isSaving ? "Saving..." : "Save Review"}
-        </Button>
-
-        {(review || memo) && (
+      {/* Actions */}
+      <div className="fixed bottom-0 left-0 right-0 bg-background border-t p-4 pb-8 z-20">
+        <div className="max-w-2xl mx-auto space-y-3">
           <Button
-            variant="ghost"
-            className="w-full text-red-500 hover:text-red-600 hover:bg-red-50"
-            onClick={handleRemove}
+            className="w-full h-12 text-base font-semibold"
+            onClick={handleSave}
             disabled={isSaving || isRemoving}
           >
-            {isRemoving ? "Removing..." : "Delete Review & Memo"}
+            {isSaving ? "Saving..." : "Save Review"}
           </Button>
-        )}
+
+          {(review || memo) && (
+            <Button
+              variant="ghost"
+              className="w-full text-red-500 hover:text-red-600 hover:bg-red-50"
+              onClick={handleRemove}
+              disabled={isSaving || isRemoving}
+            >
+              {isRemoving ? "Removing..." : "Delete Review & Memo"}
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
