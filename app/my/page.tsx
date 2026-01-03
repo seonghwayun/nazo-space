@@ -8,12 +8,60 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { NazoPortraitCard } from "@/components/nazo/nazo-portrait-card";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Pencil, Check, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 export default function MyPage() {
   const { data: session, status } = useSession();
   const [ratedNazos, setRatedNazos] = useState<any[]>([]);
   const [isRatedLoading, setIsRatedLoading] = useState(true);
+
+  // User Profile State
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [isEditingNickname, setIsEditingNickname] = useState(false);
+  const [nicknameInput, setNicknameInput] = useState("");
+  const [isSavingNickname, setIsSavingNickname] = useState(false);
+
+  useEffect(() => {
+    async function fetchUserProfile() {
+      if (!session?.user) return;
+      try {
+        const res = await fetch("/api/user/me");
+        if (res.ok) {
+          const data = await res.json();
+          setUserProfile(data);
+          setNicknameInput(data.nickname || session.user.name || "");
+        }
+      } catch (error) {
+        console.error("Failed to fetch user profile", error);
+      }
+    }
+
+    if (session?.user) {
+      fetchUserProfile();
+    }
+  }, [session]);
+
+  const handleSaveNickname = async () => {
+    if (!nicknameInput.trim()) return;
+    setIsSavingNickname(true);
+    try {
+      const res = await fetch("/api/user/me", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nickname: nicknameInput }),
+      });
+      if (res.ok) {
+        const updatedUser = await res.json();
+        setUserProfile(updatedUser);
+        setIsEditingNickname(false);
+      }
+    } catch (error) {
+      console.error("Failed to save nickname", error);
+    } finally {
+      setIsSavingNickname(false);
+    }
+  };
 
   useEffect(() => {
     async function fetchRatedNazos() {
@@ -83,7 +131,32 @@ export default function MyPage() {
           )}
 
           <div className="flex-1">
-            <h2 className="text-xl font-bold">{session.user?.name}</h2>
+            {isEditingNickname ? (
+              <div className="flex items-center gap-2">
+                <Input
+                  value={nicknameInput}
+                  onChange={(e) => setNicknameInput(e.target.value)}
+                  className="h-8 w-40"
+                  maxLength={20}
+                />
+                <Button size="icon" variant="ghost" className="h-8 w-8 text-green-600" onClick={handleSaveNickname} disabled={isSavingNickname}>
+                  <Check className="h-4 w-4" />
+                </Button>
+                <Button size="icon" variant="ghost" className="h-8 w-8 text-red-600" onClick={() => setIsEditingNickname(false)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl font-bold">{userProfile?.nickname}</h2>
+                <Button size="icon" variant="ghost" className="h-6 w-6 text-muted-foreground opacity-50 hover:opacity-100" onClick={() => {
+                  setNicknameInput(userProfile?.nickname || "");
+                  setIsEditingNickname(true);
+                }}>
+                  <Pencil className="h-3 w-3" />
+                </Button>
+              </div>
+            )}
             <p className="text-muted-foreground text-sm">{session.user?.email}</p>
           </div>
         </div>
