@@ -22,8 +22,8 @@ export default function MyPage() {
 
   if (!session) {
     return (
-      <MainLayout>
-        <div className="flex flex-col items-center justify-center h-[50vh] gap-6 px-4 sm:px-6 md:px-8 py-6 md:py-10">
+      <MainLayout padded>
+        <div className="flex flex-col items-center justify-center h-[50vh] gap-6">
           <h1 className="text-2xl font-bold">Welcome to Nazo Space</h1>
           <p className="text-muted-foreground text-center max-w-xs">
             Sign in to track your progress and manage your creations.
@@ -37,8 +37,8 @@ export default function MyPage() {
   }
 
   return (
-    <MainLayout>
-      <div className="flex flex-col gap-8 px-4 sm:px-6 md:px-8 py-6 md:py-10">
+    <MainLayout padded>
+      <div className="flex flex-col gap-8">
         <div className="flex items-center gap-4 p-4 bg-card rounded-lg border shadow-sm">
           {session.user?.image ? (
             <Image

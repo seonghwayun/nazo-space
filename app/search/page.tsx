@@ -58,8 +58,8 @@ export default function SearchPage() {
   const isSearching = query.length > 0 && (query !== debouncedQuery || (debouncedQuery !== lastSearchedQuery && isLoading));
 
   return (
-    <MainLayout>
-      <div className="flex flex-col gap-6 px-4 sm:px-6 md:px-8 py-6 md:py-10 h-full">
+    <MainLayout padded>
+      <div className="flex flex-col gap-6 h-full">
         <div className="relative shrink-0">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input

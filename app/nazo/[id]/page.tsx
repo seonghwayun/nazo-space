@@ -9,6 +9,7 @@ import { ChevronLeft, ImageIcon, Loader2, PenTool, Share2, Plus, Edit3, Eye, Mor
 import { INazo } from "@/models/nazo";
 import { useSession } from "next-auth/react";
 import { NazoFormModal } from "@/components/admin/nazo-form-modal";
+import { LoginModal } from "@/components/auth/login-modal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,6 +44,7 @@ export default function NazoDetailPage() {
   const [userReview, setUserReview] = useState<string>("");
   const [userMemo, setUserMemo] = useState<string>(""); // Added memo state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false); // Edit modal state
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isReviewExpanded, setIsReviewExpanded] = useState(false);
 
   useEffect(() => {
@@ -93,7 +95,16 @@ export default function NazoDetailPage() {
     fetchUserData();
   }, [id, session]);
 
+  const checkAuth = () => {
+    if (!session) {
+      setIsLoginModalOpen(true);
+      return false;
+    }
+    return true;
+  };
+
   const handleSaveRate = async (rate: number) => {
+    if (!checkAuth()) return;
     if (!id) return;
     try {
       // Save Rate
@@ -345,7 +356,9 @@ export default function NazoDetailPage() {
                     variant="ghost"
                     size="sm"
                     className="h-8 w-8 p-0 hover:bg-muted"
-                    onClick={() => router.push(`/nazo/${id}/review`)}
+                    onClick={() => {
+                      if (checkAuth()) router.push(`/nazo/${id}/review`);
+                    }}
                   >
                     <Edit3 className="h-5 w-5 text-muted-foreground" />
                   </Button>
@@ -377,7 +390,9 @@ export default function NazoDetailPage() {
               ) : (
                 <div
                   className="cursor-pointer hover:opacity-70 transition-opacity"
-                  onClick={() => router.push(`/nazo/${id}/review`)}
+                  onClick={() => {
+                    if (checkAuth()) router.push(`/nazo/${id}/review`);
+                  }}
                 >
                   <p className="text-sm text-muted-foreground">이 작품에 대한 생각을 자유롭게 남겨주세요.</p>
                 </div>
@@ -440,6 +455,13 @@ export default function NazoDetailPage() {
           initialData={nazo}
           title="Edit Nazo"
         />
-      )}    </div>
+      )}
+
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        onLogin={() => router.push("/my")}
+      />
+    </div>
   );
 }
