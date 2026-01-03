@@ -8,6 +8,7 @@ import { MainLayout } from "@/components/layout/main-layout";
 import { Search, Loader2, ImageIcon, Star, Gauge, Clock } from "lucide-react";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useSearchContext } from "@/contexts/search-context";
+import { NazoCard } from "@/components/nazo/nazo-card";
 
 export default function SearchPage() {
   const {
@@ -58,7 +59,7 @@ export default function SearchPage() {
 
   return (
     <MainLayout>
-      <div className="flex flex-col gap-6 h-full">
+      <div className="flex flex-col gap-6 px-4 sm:px-6 md:px-8 py-6 md:py-10 h-full">
         <div className="relative shrink-0">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
@@ -78,46 +79,7 @@ export default function SearchPage() {
           ) : results.length > 0 && query ? (
             <div className="grid gap-4">
               {results.map((nazo: any) => (
-                <Link key={nazo._id} href={`/nazo/${nazo._id}`} className="block">
-                  <div className="flex gap-4 p-4 border rounded-lg bg-card text-card-foreground shadow-sm hover:bg-accent/50 transition-colors">
-                    <div className="relative shrink-0 w-20 h-20 bg-muted rounded-md overflow-hidden flex items-center justify-center">
-                      <Image
-                        src={nazo.imageUrl || `/api/image/${nazo._id}`}
-                        alt={nazo.originalTitle}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0 flex flex-col justify-center">
-
-                      <h3 className="font-semibold text-lg truncate leading-tight">{nazo.originalTitle}</h3>
-                      {nazo.translatedTitle && (
-                        <p className="text-sm text-muted-foreground truncate">{nazo.translatedTitle}</p>
-                      )}
-
-                      {/* Metric Badges */}
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {/* Rating Badge */}
-                        <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-yellow-50 text-yellow-700 text-xs font-semibold">
-                          <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
-                          <span>{nazo.averageRate ? nazo.averageRate.toFixed(1) : "0.0"}</span>
-                        </div>
-
-                        {/* Difficulty Badge */}
-                        <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-rose-50 text-rose-600 text-xs font-semibold">
-                          <Gauge className="w-3 h-3" />
-                          <span>{nazo.difficulty || "미정"}</span>
-                        </div>
-
-                        {/* Time Badge */}
-                        <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-gray-100 text-gray-600 text-xs font-semibold">
-                          <Clock className="w-3 h-3" />
-                          <span>{nazo.estimatedTime || "미정"}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
+                <NazoCard key={nazo._id} nazo={nazo} />
               ))}
             </div>
           ) : query ? (
