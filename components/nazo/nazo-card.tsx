@@ -5,9 +5,10 @@ import { INazo } from "@/models/nazo";
 
 interface NazoCardProps {
   nazo: INazo;
+  myRate?: number;
 }
 
-export function NazoCard({ nazo }: NazoCardProps) {
+export function NazoCard({ nazo, myRate }: NazoCardProps) {
   return (
     <Link href={`/nazo/${nazo._id}`} className="block h-full">
       <div className="flex gap-4 p-4 border rounded-lg bg-card text-card-foreground shadow-sm hover:bg-accent/50 transition-colors h-full">
@@ -36,8 +37,11 @@ export function NazoCard({ nazo }: NazoCardProps) {
             <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-yellow-50 text-yellow-700 text-xs font-semibold">
               <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
               <span>
-                {nazo.averageRate ? nazo.averageRate.toFixed(1) : "0.0"}
+                {myRate !== undefined
+                  ? myRate
+                  : nazo.averageRate ? nazo.averageRate.toFixed(1) : "0.0"}
               </span>
+              {myRate !== undefined && <span className="text-[10px] font-normal opacity-80 ml-0.5">(내 점수)</span>}
             </div>
 
             {/* Difficulty Badge */}
