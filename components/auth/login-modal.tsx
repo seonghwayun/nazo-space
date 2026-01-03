@@ -35,18 +35,18 @@ export function LoginModal({ isOpen, onClose, onLogin }: LoginModalProps) {
               <LogIn className="h-6 w-6 text-primary" />
             </div>
           </div>
-          <h2 className="text-xl font-bold">Login Required</h2>
+          <h2 className="text-xl font-bold">로그인 필요</h2>
           <p className="text-sm text-muted-foreground">
-            Please log in to leave a review or rate this Nazo.
+            리뷰나 평점을 남기시려면 로그인이 필요합니다.
           </p>
         </div>
 
         <div className="flex flex-col gap-2 pt-2">
           <Button onClick={onLogin} className="w-full" size="lg">
-            Go to Login Page
+            로그인 하러가기
           </Button>
           <Button variant="ghost" onClick={onClose} className="w-full">
-            Cancel
+            취소
           </Button>
         </div>
       </div>

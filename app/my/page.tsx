@@ -24,12 +24,12 @@ export default function MyPage() {
     return (
       <MainLayout padded>
         <div className="flex flex-col items-center justify-center h-[50vh] gap-6">
-          <h1 className="text-2xl font-bold">Welcome to Nazo Space</h1>
+          <h1 className="text-2xl font-bold">Nazo Space에 오신 것을 환영합니다</h1>
           <p className="text-muted-foreground text-center max-w-xs">
-            Sign in to track your progress and manage your creations.
+            나조 기록을 관리하려면 로그인해주세요.
           </p>
           <Button onClick={() => signIn("google")} className="w-full max-w-sm">
-            Sign in with Google
+            Google로 로그인
           </Button>
         </div>
       </MainLayout>
@@ -65,7 +65,7 @@ export default function MyPage() {
         {session.user?.isAdmin && (
           <Link href="/admin" className="w-full">
             <Button className="w-full" variant="default">
-              Manage Nazos (Admin)
+              나조 관리 (관리자)
             </Button>
           </Link>
         )}
@@ -73,14 +73,14 @@ export default function MyPage() {
         <div className="space-y-4">
           {/* Future My Page Content */}
           <div className="p-4 border rounded-lg bg-muted/30">
-            <h3 className="font-semibold mb-2">My Nazos</h3>
-            <p className="text-sm text-muted-foreground">You haven't solved any nazos yet.</p>
+            <h3 className="font-semibold mb-2">내 나조</h3>
+            <p className="text-sm text-muted-foreground">아직 푼 나조가 없습니다.</p>
           </div>
         </div>
 
         <Button variant="outline" onClick={() => signOut()} className="text-red-500 hover:text-red-600 hover:bg-red-50 border-red-200">
           <LogOut className="mr-2 h-4 w-4" />
-          Sign Out
+          로그아웃
         </Button>
       </div>
     </MainLayout>

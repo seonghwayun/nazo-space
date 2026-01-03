@@ -99,9 +99,9 @@ export default function NazoReviewPage() {
   if (!nazo) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-background gap-4">
-        <p className="text-muted-foreground">Nazo not found.</p>
+        <p className="text-muted-foreground">나조를 찾을 수 없습니다.</p>
         <Button variant="outline" onClick={() => router.back()}>
-          Go Back
+          돌아가기
         </Button>
       </div>
     );
@@ -161,7 +161,7 @@ export default function NazoReviewPage() {
             ⚠️ <strong>스포일러 금지:</strong> 다른 사람에게 보여지는 리뷰이니 퍼즐에 대한 답이나 힌트를 포함하지 마세요.
           </div>
           <Textarea
-            placeholder="Write your review here... (Public)"
+            placeholder="리뷰를 작성해주세요... (공개)"
             value={review}
             onChange={(e) => setReview(e.target.value)}
             className="min-h-[150px] resize-y text-base p-4"
@@ -178,7 +178,7 @@ export default function NazoReviewPage() {
             🔒 <strong>비공개 메모:</strong> 이 메모는 다른 사람들에게 보여지지 않습니다. 이 나조에 대해서 기억하고 싶은 포인트를 자유롭게 적어보세요.
           </div>
           <Textarea
-            placeholder="Write private notes here..."
+            placeholder="개인 메모를 작성해주세요... (비공개)"
             value={memo}
             onChange={(e) => setMemo(e.target.value)}
             className="min-h-[100px] resize-y text-base p-4"
@@ -194,7 +194,7 @@ export default function NazoReviewPage() {
               onClick={handleRemove}
               disabled={isSaving || isRemoving}
             >
-              {isRemoving ? "Removing..." : "Delete Review & Memo"}
+              {isRemoving ? "삭제 중..." : "리뷰 및 메모 삭제"}
             </Button>
           </div>
         )}

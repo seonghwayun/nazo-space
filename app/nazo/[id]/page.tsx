@@ -174,7 +174,7 @@ export default function NazoDetailPage() {
       setNazo((prev: any) => ({ ...prev, ...updatedNazo }));
     } catch (error) {
       console.error("Failed to update nazo:", error);
-      alert("Failed to update nazo");
+      alert("나조 수정에 실패했습니다.");
     }
   };
 
@@ -199,7 +199,7 @@ export default function NazoDetailPage() {
 
   return (
     <div className="bg-background min-h-full relative">
-      <div className="flex flex-col pb-20">
+      <div className="flex flex-col">
         {/* Hero Section */}
         <div className="relative w-full h-[45vh] md:h-[55vh] shrink-0">
           <Image
@@ -406,13 +406,13 @@ export default function NazoDetailPage() {
 
 
           <div className="space-y-2">
-            <h3 className="text-sm font-semibold text-muted-foreground">Description</h3>
+            <h3 className="text-sm font-semibold text-muted-foreground">설명</h3>
             <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90">{nazo.description}</p>
           </div>
 
           {nazo.creators && nazo.creators.length > 0 && (
             <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-muted-foreground">Creators</h3>
+              <h3 className="text-sm font-semibold text-muted-foreground">제작자</h3>
               <div className="flex flex-wrap gap-2">
                 {nazo.creators.map((creator: any) => {
                   const bgColor = stringToColor(creator._id || creator.name);
@@ -442,26 +442,44 @@ export default function NazoDetailPage() {
               </div>
             </div>
           )}
+
+          {nazo.tags && nazo.tags.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-muted-foreground">태그</h3>
+              <div className="flex flex-wrap gap-2">
+                {nazo.tags.map((tag: any) => (
+                  <span
+                    key={tag._id || tag} // Handle both populated and unpopulated tags
+                    className="px-3 py-1.5 rounded-full bg-secondary text-secondary-foreground text-sm font-medium"
+                  >
+                    #{typeof tag === 'object' && 'name' in tag ? tag.name : tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
 
 
-      {session?.user?.isAdmin && nazo && isEditModalOpen && (
-        <NazoFormModal
-          isOpen={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
-          onSubmit={handleUpdateNazo}
-          initialData={nazo}
-          title="Edit Nazo"
-        />
-      )}
+      {
+        session?.user?.isAdmin && nazo && isEditModalOpen && (
+          <NazoFormModal
+            isOpen={isEditModalOpen}
+            onClose={() => setIsEditModalOpen(false)}
+            onSubmit={handleUpdateNazo}
+            initialData={nazo}
+            title="나조 수정"
+          />
+        )
+      }
 
       <LoginModal
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}
         onLogin={() => router.push("/my")}
       />
-    </div>
+    </div >
   );
 }

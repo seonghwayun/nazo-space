@@ -6,10 +6,11 @@ import { useEffect, useState } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Loader2, ShieldAlert } from "lucide-react";
 
-import { Plus, User } from "lucide-react";
+import { Plus, User, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NazoFormModal } from "@/components/admin/nazo-form-modal";
 import { CreatorFormModal } from "@/components/admin/creator-form-modal";
+import { TagFormModal } from "@/components/admin/tag-form-modal";
 
 export default function AdminPage() {
   const { data: session, status } = useSession();
@@ -17,6 +18,7 @@ export default function AdminPage() {
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [isCreateNazoModalOpen, setIsCreateNazoModalOpen] = useState(false);
   const [isCreateCreatorModalOpen, setIsCreateCreatorModalOpen] = useState(false);
+  const [isCreateTagModalOpen, setIsCreateTagModalOpen] = useState(false);
 
   useEffect(() => {
     if (status === "loading") return;
@@ -59,6 +61,20 @@ export default function AdminPage() {
     // Just close modal for now, maybe add toast later
   };
 
+  const handleCreateTag = async (data: any) => {
+    const res = await fetch("/api/tag", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      alert(errorData.error || "Failed to create tag");
+      throw new Error("Failed to create tag");
+    }
+  };
+
   if (status === "loading" || (session?.user.isAdmin && !isRedirecting)) {
     // Show content only if loading or confirmed admin
     if (status === "loading") {
@@ -71,10 +87,12 @@ export default function AdminPage() {
 
     if (session?.user.isAdmin) {
       return (
-        <MainLayout>
-          <div className="container py-8">
-            <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
-            <p className="text-muted-foreground mb-8">Welcome, Admin. Manage your Nazos here.</p>
+        <MainLayout padded>
+          <div className="flex flex-col gap-6">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
+              <p className="text-muted-foreground">Welcome, Admin. Manage your Nazos here.</p>
+            </div>
 
             <div className="flex flex-col gap-4 max-w-sm">
               <Button onClick={() => setIsCreateNazoModalOpen(true)} className="w-full justify-start h-12 text-lg">
@@ -82,6 +100,9 @@ export default function AdminPage() {
               </Button>
               <Button onClick={() => setIsCreateCreatorModalOpen(true)} variant="outline" className="w-full justify-start h-12 text-lg">
                 <User className="mr-2 h-5 w-5" /> Create New Creator
+              </Button>
+              <Button onClick={() => setIsCreateTagModalOpen(true)} variant="outline" className="w-full justify-start h-12 text-lg">
+                <Tag className="mr-2 h-5 w-5" /> Create New Tag
               </Button>
             </div>
 
@@ -100,6 +121,13 @@ export default function AdminPage() {
             onClose={() => setIsCreateCreatorModalOpen(false)}
             onSubmit={handleCreateCreator}
             title="Create New Creator"
+          />
+
+          <TagFormModal
+            isOpen={isCreateTagModalOpen}
+            onClose={() => setIsCreateTagModalOpen(false)}
+            onSubmit={handleCreateTag}
+            title="Create New Tag"
           />
         </MainLayout>
       );

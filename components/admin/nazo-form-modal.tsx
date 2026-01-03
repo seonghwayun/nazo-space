@@ -11,6 +11,11 @@ interface Creator {
   name: string;
 }
 
+interface Tag {
+  _id: string;
+  name: string;
+}
+
 interface NazoFormData {
   originalTitle: string;
   translatedTitle: string;
@@ -19,6 +24,7 @@ interface NazoFormData {
   difficulty: string;
   estimatedTime: string;
   creators: Creator[];
+  tags: Tag[];
 }
 
 interface NazoFormModalProps {
@@ -44,6 +50,7 @@ export function NazoFormModal({
     difficulty: "",
     estimatedTime: "",
     creators: [],
+    tags: [],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [useFileUpload, setUseFileUpload] = useState(false);
@@ -54,6 +61,11 @@ export function NazoFormModal({
   const [creatorQuery, setCreatorQuery] = useState("");
   const [creatorResults, setCreatorResults] = useState<Creator[]>([]);
   const [isSearchingCreators, setIsSearchingCreators] = useState(false);
+
+  // Tag Search State
+  const [tagQuery, setTagQuery] = useState("");
+  const [tagResults, setTagResults] = useState<Tag[]>([]);
+  const [isSearchingTags, setIsSearchingTags] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -66,6 +78,7 @@ export function NazoFormModal({
           difficulty: initialData.difficulty ? String(initialData.difficulty) : "",
           estimatedTime: initialData.estimatedTime || "",
           creators: initialData.creators || [],
+          tags: initialData.tags || [],
         });
       } else {
         // Reset for create mode
@@ -77,10 +90,13 @@ export function NazoFormModal({
           difficulty: "",
           estimatedTime: "",
           creators: [],
+          tags: [],
         });
       }
       setCreatorQuery("");
       setCreatorResults([]);
+      setTagQuery("");
+      setTagResults([]);
       setUseFileUpload(false);
       setFile(null);
     }
@@ -109,6 +125,30 @@ export function NazoFormModal({
 
     return () => clearTimeout(delayDebounceFn);
   }, [creatorQuery]);
+
+  // Tag Search Effect
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (tagQuery.trim().length > 0) {
+        setIsSearchingTags(true);
+        try {
+          const res = await fetch(`/api/tag?q=${encodeURIComponent(tagQuery)}`);
+          if (res.ok) {
+            const data = await res.json();
+            setTagResults(data.results || []);
+          }
+        } catch (error) {
+          console.error("Failed to search tags", error);
+        } finally {
+          setIsSearchingTags(false);
+        }
+      } else {
+        setTagResults([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [tagQuery]);
 
   if (!isOpen) return null;
 
@@ -142,6 +182,22 @@ export function NazoFormModal({
     }));
   };
 
+  const handleAddTag = (tag: Tag) => {
+    setFormData(prev => {
+      if (prev.tags.some(t => t._id === tag._id)) return prev;
+      return { ...prev, tags: [...prev.tags, tag] };
+    });
+    setTagQuery("");
+    setTagResults([]);
+  };
+
+  const handleRemoveTag = (tagId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      tags: prev.tags.filter(t => t._id !== tagId)
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -163,6 +219,7 @@ export function NazoFormModal({
         ...formData,
         imageUrl: finalImageUrl,
         creators: formData.creators.map(c => c._id),
+        tags: formData.tags.map(t => t._id),
       };
       await onSubmit(payload);
       onClose();
@@ -240,6 +297,41 @@ export function NazoFormModal({
                       onClick={() => handleAddCreator(creator)}
                     >
                       {creator.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Tags</label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {formData.tags.map(tag => (
+                <div key={tag._id} className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-xs">
+                  <span>{tag.name}</span>
+                  <button type="button" onClick={() => handleRemoveTag(tag._id)} className="text-muted-foreground hover:text-foreground">
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="relative">
+              <Input
+                placeholder="Search tags by name..."
+                value={tagQuery}
+                onChange={(e) => setTagQuery(e.target.value)}
+              />
+              {tagResults.length > 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-popover border rounded-md shadow-md max-h-40 overflow-y-auto">
+                  {tagResults.map(tag => (
+                    <button
+                      key={tag._id}
+                      type="button"
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground"
+                      onClick={() => handleAddTag(tag)}
+                    >
+                      {tag.name}
                     </button>
                   ))}
                 </div>

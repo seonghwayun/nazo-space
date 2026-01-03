@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 import connectToDatabase from "@/lib/db";
 import Rate from "@/models/rate";
 import Nazo from "@/models/nazo";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 
 async function updateNazoStatsIncremental(nazoId: string, rateDiff: number, countDiff: number) {
   // Atomic update using Aggregation Pipeline (MongoDB 4.2+)

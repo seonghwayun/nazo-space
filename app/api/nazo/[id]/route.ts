@@ -5,7 +5,7 @@ import Tag from "@/models/tag"; // Ensure Tag model is registered
 import Creator from "@/models/creator"; // Ensure Creator model is registered
 
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 
 export async function GET(
   request: NextRequest,

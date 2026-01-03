@@ -10,7 +10,7 @@ export function BottomNav() {
 
   const navItems = [
     {
-      label: "Home",
+      label: "홈",
       href: "/",
       icon: Home,
     },
@@ -25,7 +25,7 @@ export function BottomNav() {
       icon: BookOpen,
     },
     {
-      label: "MY",
+      label: "마이",
       href: "/my",
       icon: User,
     },

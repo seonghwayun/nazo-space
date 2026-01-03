@@ -69,7 +69,7 @@ export default function SearchPage() {
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search..."
+            placeholder="검색어를 입력하세요..."
             className="pl-9 w-full bg-background"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -138,11 +138,11 @@ export default function SearchPage() {
             </div>
           ) : query ? (
             <div className="flex flex-col items-center justify-center h-40 text-center">
-              <p className="text-muted-foreground">No results found for "{query}" in {activeTab}</p>
+              <p className="text-muted-foreground">"{query}"에 대한 {activeTab === "nazo" ? "나조" : activeTab === "creator" ? "제작자" : "태그"} 검색 결과가 없습니다.</p>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-40 text-center">
-              <p className="text-muted-foreground">Search results will appear here.</p>
+              <p className="text-muted-foreground">검색 결과가 여기에 표시됩니다.</p>
             </div>
           )}
         </div>
