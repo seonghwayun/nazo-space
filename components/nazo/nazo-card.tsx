@@ -16,6 +16,7 @@ export function NazoCard({ nazo }: NazoCardProps) {
             src={nazo.imageUrl || `/api/image/${nazo._id}`}
             alt={nazo.originalTitle}
             fill
+            sizes="80px"
             className="object-cover"
           />
         </div>

@@ -2,12 +2,20 @@
 
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import { INazo } from "@/models/nazo";
+import { ICreator } from "@/models/creator";
+import { ITag } from "@/models/tag";
+
+export interface SearchResults {
+  nazos: INazo[];
+  creators: ICreator[];
+  tags: ITag[];
+}
 
 interface SearchContextType {
   query: string;
   setQuery: (query: string) => void;
-  results: INazo[];
-  setResults: (results: INazo[]) => void;
+  results: SearchResults;
+  setResults: (results: SearchResults) => void;
   lastSearchedQuery: string;
   setLastSearchedQuery: (query: string) => void;
 }
@@ -16,7 +24,7 @@ const SearchContext = createContext<SearchContextType | undefined>(undefined);
 
 export function SearchProvider({ children }: { children: ReactNode }) {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<INazo[]>([]);
+  const [results, setResults] = useState<SearchResults>({ nazos: [], creators: [], tags: [] });
   const [lastSearchedQuery, setLastSearchedQuery] = useState("");
 
   return (

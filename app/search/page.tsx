@@ -21,19 +21,17 @@ export default function SearchPage() {
   } = useSearchContext();
 
   const [isLoading, setIsLoading] = React.useState(false);
+  const [activeTab, setActiveTab] = React.useState<"nazo" | "creator" | "tag">("nazo");
   const debouncedQuery = useDebounce(query, 500);
 
   React.useEffect(() => {
     async function fetchResults() {
-      // If we already have results matching our query (and no pending debounce change),
-      // we might want to skip fetching to preserve state.
-      // However, simplified logic: if debounced query matches last searched, don't fetch.
       if (debouncedQuery === lastSearchedQuery && debouncedQuery) {
         return;
       }
 
       if (!debouncedQuery) {
-        setResults([]);
+        setResults({ nazos: [], creators: [], tags: [] });
         setLastSearchedQuery("");
         return;
       }
@@ -42,7 +40,9 @@ export default function SearchPage() {
       try {
         const response = await fetch(`/api/nazo/search?q=${encodeURIComponent(debouncedQuery)}`);
         const data = await response.json();
-        setResults(data.results || []);
+        // The API now returns { nazos: [], creators: [], tags: [] }
+        // If the API returns the old format { results: [] }, handle gracefully if needed, but we updated API already.
+        setResults(data);
       } catch (error) {
         console.error("Failed to search:", error);
       } finally {
@@ -52,39 +52,93 @@ export default function SearchPage() {
     }
 
     fetchResults();
-  }, [debouncedQuery]); // Removed lastSearchedQuery from dep array to avoid loops, though strict mode logic might differ.
+  }, [debouncedQuery]);
 
-  // Determine if we are effectively loading.
   const isSearching = query.length > 0 && (query !== debouncedQuery || (debouncedQuery !== lastSearchedQuery && isLoading));
+
+  // Determine which list to show
+  const currentList =
+    activeTab === "nazo" ? results.nazos :
+      activeTab === "creator" ? results.creators :
+        results.tags;
 
   return (
     <MainLayout padded>
-      <div className="flex flex-col gap-6 h-full">
+      <div className="flex flex-col gap-4 h-full">
         <div className="relative shrink-0">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search nazo..."
+            placeholder="Search..."
             className="pl-9 w-full bg-background"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
         </div>
 
-        <div className="flex-1 overflow-y-auto min-h-0">
+        {/* Tab Navigation */}
+        <div className="flex border-b shrink-0">
+          <button
+            className={`flex-1 pb-3 text-sm font-medium transition-colors relative ${activeTab === "nazo" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+            onClick={() => setActiveTab("nazo")}
+          >
+            나조
+            {activeTab === "nazo" && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground" />
+            )}
+          </button>
+          <button
+            className={`flex-1 pb-3 text-sm font-medium transition-colors relative ${activeTab === "creator" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+            onClick={() => setActiveTab("creator")}
+          >
+            제작자
+            {activeTab === "creator" && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground" />
+            )}
+          </button>
+          <button
+            className={`flex-1 pb-3 text-sm font-medium transition-colors relative ${activeTab === "tag" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+            onClick={() => setActiveTab("tag")}
+          >
+            태그
+            {activeTab === "tag" && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground" />
+            )}
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto min-h-0 pt-2">
           {isSearching ? (
             <div className="flex items-center justify-center h-40">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
-          ) : results.length > 0 && query ? (
+          ) : currentList?.length > 0 ? (
             <div className="grid gap-4">
-              {results.map((nazo: any) => (
-                <NazoCard key={nazo._id} nazo={nazo} />
+              {activeTab === "nazo" && results.nazos.map((nazo) => (
+                <NazoCard key={String(nazo._id)} nazo={nazo} />
+              ))}
+
+              {activeTab === "creator" && results.creators.map((creator) => (
+                <div key={String(creator._id)} className="flex items-center gap-3 p-4 border rounded-lg bg-card text-card-foreground">
+                  <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                    <span className="text-lg">👤</span>
+                  </div>
+                  <span className="font-medium">{creator.name}</span>
+                </div>
+              ))}
+
+              {activeTab === "tag" && results.tags.map((tag) => (
+                <div key={String(tag._id)} className="flex items-center gap-3 p-4 border rounded-lg bg-card text-card-foreground">
+                  <span className="font-medium"># {tag.name}</span>
+                </div>
               ))}
             </div>
           ) : query ? (
             <div className="flex flex-col items-center justify-center h-40 text-center">
-              <p className="text-muted-foreground">No results found for "{query}"</p>
+              <p className="text-muted-foreground">No results found for "{query}" in {activeTab}</p>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-40 text-center">
