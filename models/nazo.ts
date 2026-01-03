@@ -9,6 +9,9 @@ export interface INazo extends Document {
   imageUrl?: string;
   difficulty?: number;
   estimatedTime?: string;
+  averageRate?: number;
+  rateCount?: number;
+  totalRate?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -48,6 +51,18 @@ const NazoSchema: Schema = new Schema(
       type: Number,
       min: 1,
       max: 10, // Assuming a 1-10 scale, adjustable
+    },
+    averageRate: {
+      type: Number,
+      default: 0,
+    },
+    rateCount: {
+      type: Number,
+      default: 0,
+    },
+    totalRate: {
+      type: Number,
+      default: 0,
     },
     estimatedTime: {
       type: String,

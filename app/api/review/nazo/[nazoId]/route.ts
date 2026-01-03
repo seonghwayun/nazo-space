@@ -41,24 +41,14 @@ export async function POST(
 
     const { nazoId } = await params;
     const body = await req.json();
-    const { rate, review, memo } = body;
+    const { review, memo } = body;
+    const userId = (session as any).user.id;
 
     await connectToDatabase();
 
     const updatedReview = await Review.findOneAndUpdate(
-      {
-        userId: (session as any).user.id,
-        nazoId: nazoId,
-      },
-      {
-        $set: {
-          rate,
-          review,
-          memo,
-          userId: (session as any).user.id,
-          nazoId: nazoId
-        }
-      },
+      { userId, nazoId },
+      { $set: { review, memo, userId, nazoId } },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
 
@@ -80,17 +70,11 @@ export async function DELETE(
     }
 
     const { nazoId } = await params;
+    const userId = (session as any).user.id;
     await connectToDatabase();
 
-    await Review.updateOne(
-      {
-        userId: (session as any).user.id,
-        nazoId: nazoId,
-      },
-      {
-        $set: { rate: 0 }
-      }
-    );
+    // Just delete the review document
+    await Review.deleteOne({ userId, nazoId });
 
     return NextResponse.json({ success: true });
   } catch (error) {

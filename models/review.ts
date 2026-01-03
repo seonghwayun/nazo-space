@@ -3,7 +3,6 @@ import mongoose, { Schema, Model, Document } from "mongoose";
 export interface IReview extends Document {
   userId: string;
   nazoId: string;
-  rate?: number;
   review?: string;
   memo?: string;
   createdAt: Date;
@@ -14,7 +13,6 @@ const ReviewSchema = new Schema<IReview>(
   {
     userId: { type: String, required: true },
     nazoId: { type: String, required: true },
-    rate: { type: Number, min: 0, max: 5 },
     review: { type: String },
     memo: { type: String },
   },

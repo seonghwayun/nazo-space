@@ -12,6 +12,8 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
+    delete (body as any).createdAt;
+    delete (body as any).updatedAt;
     await dbConnect();
 
     const nazo = await Nazo.create(body);

@@ -50,6 +50,8 @@ export async function PUT(
 
     const { id } = await params;
     const body = await req.json();
+    delete (body as any).createdAt;
+    delete (body as any).updatedAt;
     await dbConnect();
 
     const updatedNazo = await Nazo.findByIdAndUpdate(id, body, {

@@ -203,6 +203,16 @@ export function NazoFormModal({
           </div>
 
           <div className="space-y-2">
+            <label className="text-sm font-medium">Translated Title</label>
+            <Input
+              name="translatedTitle"
+              value={formData.translatedTitle}
+              onChange={handleChange}
+              placeholder="Optional translated title"
+            />
+          </div>
+
+          <div className="space-y-2">
             <label className="text-sm font-medium">Creators</label>
             <div className="flex flex-wrap gap-2 mb-2">
               {formData.creators.map(creator => (
@@ -235,16 +245,6 @@ export function NazoFormModal({
                 </div>
               )}
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Translated Title</label>
-            <Input
-              name="translatedTitle"
-              value={formData.translatedTitle}
-              onChange={handleChange}
-              placeholder="Optional translated title"
-            />
           </div>
 
           <div className="space-y-2">

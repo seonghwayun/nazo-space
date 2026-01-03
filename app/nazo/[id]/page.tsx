@@ -58,38 +58,61 @@ export default function NazoDetailPage() {
   }, [id]);
 
   useEffect(() => {
-    async function fetchReview() {
+    async function fetchUserData() {
       if (!id || !session?.user) return;
       try {
-        const res = await fetch(`/api/review/nazo/${id}`);
-        if (res.ok) {
-          const data = await res.json();
+        const [reviewRes, rateRes] = await Promise.all([
+          fetch(`/api/review/nazo/${id}`),
+          fetch(`/api/rate/nazo/${id}`)
+        ]);
+
+        if (reviewRes.ok) {
+          const data = await reviewRes.json();
           if (data) {
-            setUserRate(data.rate);
             setUserReview(data.review || "");
           }
         }
+
+        if (rateRes.ok) {
+          const data = await rateRes.json();
+          if (data) {
+            setUserRate(data.rate);
+          }
+        }
       } catch (error) {
-        console.error("Failed to fetch review", error);
+        console.error("Failed to fetch user data", error);
       }
     }
-    fetchReview();
+    fetchUserData();
   }, [id, session]);
 
   const handleSaveRate = async (rate: number, review: string) => {
     if (!id) return;
     try {
-      const res = await fetch(`/api/review/nazo/${id}`, {
+      // Save Rate
+      const rateRes = await fetch(`/api/rate/nazo/${id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rate, review }),
+        body: JSON.stringify({ rate }),
       });
 
-      if (!res.ok) throw new Error("Failed to save review");
+      if (!rateRes.ok) throw new Error("Failed to save rate");
+      const rateData = await rateRes.json();
+      setUserRate(rateData.rate);
 
-      const data = await res.json();
-      setUserRate(data.rate);
-      setUserReview(data.review || "");
+      // Save Review (only if content exists or we want to update it)
+      // The modal passes both, so we update both.
+      if (review !== undefined) {
+        const reviewRes = await fetch(`/api/review/nazo/${id}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ review }),
+        });
+        if (!reviewRes.ok) throw new Error("Failed to save review");
+        const reviewData = await reviewRes.json();
+        setUserReview(reviewData.review || "");
+      }
+
     } catch (error) {
       console.error(error);
       throw error;
@@ -99,14 +122,14 @@ export default function NazoDetailPage() {
   const handleRemoveRate = async () => {
     if (!id) return;
     try {
-      const res = await fetch(`/api/review/nazo/${id}`, {
+      const res = await fetch(`/api/rate/nazo/${id}`, {
         method: "DELETE",
       });
 
-      if (!res.ok) throw new Error("Failed to delete review");
+      if (!res.ok) throw new Error("Failed to delete rate");
 
       setUserRate(null);
-      setUserReview("");
+      // We do NOT remove the review text when removing the rating, based on the previous separation logic
     } catch (error) {
       console.error(error);
       throw error;
