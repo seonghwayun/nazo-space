@@ -200,7 +200,7 @@ export default function NazoDetailPage() {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
 
-          <div className="absolute top-4 left-4 z-30">
+          <div className="fixed top-4 left-4 z-50">
             <Button
               variant="ghost"
               size="icon"
@@ -212,7 +212,7 @@ export default function NazoDetailPage() {
           </div>
 
           {session?.user?.isAdmin && (
-            <div className="absolute top-4 right-20 z-30">
+            <div className="fixed top-4 right-20 z-50">
               <Button
                 variant="ghost"
                 size="icon"
@@ -224,7 +224,7 @@ export default function NazoDetailPage() {
             </div>
           )}
 
-          <div className="absolute top-4 right-4 z-30">
+          <div className="fixed top-4 right-4 z-50">
             <Button
               variant="ghost"
               size="icon"

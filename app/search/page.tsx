@@ -5,7 +5,7 @@ import Image from "next/image";
 import * as React from "react";
 import { Input } from "@/components/ui/input";
 import { MainLayout } from "@/components/layout/main-layout";
-import { Search, Loader2, ImageIcon, Star, HelpCircle, Clock } from "lucide-react";
+import { Search, Loader2, ImageIcon, Star, Gauge, Clock } from "lucide-react";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useSearchContext } from "@/contexts/search-context";
 
@@ -90,8 +90,13 @@ export default function SearchPage() {
                     </div>
                     <div className="flex-1 min-w-0 flex flex-col justify-center">
 
+                      <h3 className="font-semibold text-lg truncate leading-tight">{nazo.originalTitle}</h3>
+                      {nazo.translatedTitle && (
+                        <p className="text-sm text-muted-foreground truncate">{nazo.translatedTitle}</p>
+                      )}
+
                       {/* Metric Badges */}
-                      <div className="flex flex-wrap gap-2 mb-2">
+                      <div className="flex flex-wrap gap-2 mt-2">
                         {/* Rating Badge */}
                         <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-yellow-50 text-yellow-700 text-xs font-semibold">
                           <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
@@ -100,21 +105,16 @@ export default function SearchPage() {
 
                         {/* Difficulty Badge */}
                         <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-rose-50 text-rose-600 text-xs font-semibold">
-                          <HelpCircle className="w-3 h-3" />
-                          <span>{nazo.difficulty || "Untagged"}</span>
+                          <Gauge className="w-3 h-3" />
+                          <span>{nazo.difficulty || "미정"}</span>
                         </div>
 
                         {/* Time Badge */}
                         <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-gray-100 text-gray-600 text-xs font-semibold">
                           <Clock className="w-3 h-3" />
-                          <span>{nazo.estimatedTime || "Untimed"}</span>
+                          <span>{nazo.estimatedTime || "미정"}</span>
                         </div>
                       </div>
-
-                      <h3 className="font-semibold text-lg truncate leading-tight">{nazo.originalTitle}</h3>
-                      {nazo.translatedTitle && (
-                        <p className="text-sm text-muted-foreground truncate">{nazo.translatedTitle}</p>
-                      )}
                     </div>
                   </div>
                 </Link>
