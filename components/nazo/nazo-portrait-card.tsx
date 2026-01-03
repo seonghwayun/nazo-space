@@ -35,9 +35,6 @@ export function NazoPortraitCard({ nazo, rank }: NazoPortraitCardProps) {
           <div className="flex items-center gap-1 text-sm text-yellow-600 px-0.5">
             <Star className="w-3.5 h-3.5 fill-yellow-500 text-yellow-500" />
             <span>{nazo.averageRate ? nazo.averageRate.toFixed(1) : "0.0"}</span>
-            {nazo.difficulty && (
-              <span className="text-muted-foreground text-xs ml-1">• {nazo.difficulty}</span>
-            )}
           </div>
         </div>
       </div>
