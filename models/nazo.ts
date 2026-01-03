@@ -73,6 +73,10 @@ const NazoSchema: Schema = new Schema(
   }
 );
 
+// Indexes for performance
+NazoSchema.index({ createdAt: -1 }); // For "Recently Added"
+NazoSchema.index({ averageRate: -1, rateCount: -1 }); // For "Top Rated"
+
 // Prevent overwriting the model if it's already compiled (Next.js hot reload fix)
 const Nazo: Model<INazo> =
   mongoose.models.Nazo || mongoose.model<INazo>('Nazo', NazoSchema);

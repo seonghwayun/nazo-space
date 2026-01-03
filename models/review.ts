@@ -23,6 +23,8 @@ const ReviewSchema = new Schema<IReview>(
 
 // Ensure a user can only review a nazo once
 ReviewSchema.index({ userId: 1, nazoId: 1 }, { unique: true });
+// Index for "Recently Reviewed"
+ReviewSchema.index({ createdAt: -1 });
 
 const Review: Model<IReview> =
   mongoose.models.Review || mongoose.model<IReview>("Review", ReviewSchema);
