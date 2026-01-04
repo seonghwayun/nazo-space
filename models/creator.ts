@@ -24,6 +24,9 @@ const CreatorSchema: Schema = new Schema(
   }
 );
 
+// Indexes for performance
+CreatorSchema.index({ name: 1 });
+
 // Prevent overwriting the model if it's already compiled
 const Creator: Model<ICreator> = mongoose.models.Creator || mongoose.model<ICreator>('Creator', CreatorSchema);
 

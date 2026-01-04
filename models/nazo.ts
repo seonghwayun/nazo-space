@@ -76,6 +76,8 @@ const NazoSchema: Schema = new Schema(
 // Indexes for performance
 NazoSchema.index({ createdAt: -1 }); // For "Recently Added"
 NazoSchema.index({ averageRate: -1, rateCount: -1 }); // For "Top Rated"
+NazoSchema.index({ originalTitle: 1 }); // For Search
+NazoSchema.index({ translatedTitle: 1 }); // For Search
 
 // Prevent overwriting the model if it's already compiled (Next.js hot reload fix)
 const Nazo: Model<INazo> =

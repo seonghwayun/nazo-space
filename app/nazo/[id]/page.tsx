@@ -1,3 +1,4 @@
+import { cache } from "react";
 import connectToDatabase from "@/lib/db";
 import Nazo from "@/models/nazo";
 import Creator from "@/models/creator";
@@ -15,10 +16,14 @@ interface PageProps {
   }>;
 }
 
+const getNazo = cache(async (id: string) => {
+  await connectToDatabase();
+  return Nazo.findById(id).populate("creators").populate("tags").lean();
+});
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params;
-  await connectToDatabase();
-  const nazo = await Nazo.findById(id);
+  const nazo = await getNazo(id);
 
   if (!nazo) {
     return {
@@ -39,12 +44,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function Page({ params }: PageProps) {
   const { id } = await params;
-  await connectToDatabase();
-
-  const nazo = await Nazo.findById(id)
-    .populate("creators")
-    .populate("tags")
-    .lean();
+  const nazo = await getNazo(id);
 
   if (!nazo) {
     notFound();
