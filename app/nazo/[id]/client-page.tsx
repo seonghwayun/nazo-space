@@ -39,6 +39,10 @@ interface ClientPageProps {
   initialNazo: INazo;
 }
 
+import { ShareModal } from "@/components/nazo/share-modal";
+
+// ... (omitted)
+
 export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
   const router = useRouter();
   const { id } = useParams();
@@ -50,6 +54,7 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
   const [userMemo, setUserMemo] = useState<string>(""); // Added memo state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false); // Edit modal state
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isReviewExpanded, setIsReviewExpanded] = useState(false);
 
   useEffect(() => {
@@ -251,6 +256,7 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
               variant="ghost"
               size="icon"
               className="text-white hover:bg-white/20 rounded-full h-14 w-14"
+              onClick={() => setIsShareModalOpen(true)}
             >
               <Share2 className="!h-8 !w-8 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
             </Button>
@@ -481,6 +487,12 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
         onClose={() => setIsLoginModalOpen(false)}
         onLogin={() => router.push("/my")}
       />
-    </div >
+
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        url={typeof window !== "undefined" ? window.location.href : ""}
+      />
+    </div>
   );
 }
