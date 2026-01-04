@@ -133,9 +133,11 @@ export default function SearchPage() {
               ))}
 
               {activeTab === "tag" && results.tags.map((tag) => (
-                <div key={String(tag._id)} className="flex items-center gap-3 p-4 border rounded-lg bg-card text-card-foreground">
-                  <span className="font-medium"># {tag.name}</span>
-                </div>
+                <Link key={String(tag._id)} href={`/tag/${tag._id}`}>
+                  <div className="flex items-center gap-3 p-4 border rounded-lg bg-card text-card-foreground hover:bg-accent/50 transition-colors">
+                    <span className="font-medium"># {tag.name}</span>
+                  </div>
+                </Link>
               ))}
             </div>
           ) : query ? (

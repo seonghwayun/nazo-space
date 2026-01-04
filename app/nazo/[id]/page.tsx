@@ -438,12 +438,13 @@ export default function NazoDetailPage() {
               <h3 className="text-sm font-semibold text-muted-foreground">태그</h3>
               <div className="flex flex-wrap gap-2">
                 {nazo.tags.map((tag: any) => (
-                  <span
+                  <Link
                     key={tag._id || tag} // Handle both populated and unpopulated tags
-                    className="px-3 py-1.5 rounded-full bg-secondary text-secondary-foreground text-sm font-medium"
+                    href={`/tag/${tag._id || tag}`}
+                    className="px-3 py-1.5 rounded-full bg-secondary text-secondary-foreground text-sm font-medium hover:opacity-80 transition-opacity"
                   >
                     #{typeof tag === 'object' && 'name' in tag ? tag.name : tag}
-                  </span>
+                  </Link>
                 ))}
               </div>
             </div>
