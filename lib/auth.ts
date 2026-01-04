@@ -1,6 +1,7 @@
 import GoogleProvider from "next-auth/providers/google";
+import { NextAuthOptions } from "next-auth";
 
-export const authOptions: any = {
+export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID ?? "",

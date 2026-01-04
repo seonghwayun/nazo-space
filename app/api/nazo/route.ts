@@ -7,13 +7,13 @@ import { authOptions } from "@/lib/auth";
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !(session as any).user.isAdmin) {
+    if (!session || !session.user.isAdmin) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await req.json();
-    delete (body as any).createdAt;
-    delete (body as any).updatedAt;
+    delete body.createdAt;
+    delete body.updatedAt;
     await dbConnect();
 
     const nazo = await Nazo.create(body);

@@ -9,10 +9,33 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { Metadata } from "next";
+
 interface CreatorPageProps {
   params: Promise<{
     id: string;
   }>;
+}
+
+export async function generateMetadata({ params }: CreatorPageProps): Promise<Metadata> {
+  const { id } = await params;
+  await connectToDatabase();
+  const creator = await Creator.findById(id);
+
+  if (!creator) {
+    return {
+      title: "제작자를 찾을 수 없음 | Nazo Space",
+    };
+  }
+
+  return {
+    title: `${creator.name} - 제작자 | Nazo Space`,
+    description: `${creator.name}님이 제작한 나조 모음입니다.`,
+    openGraph: {
+      title: `${creator.name} | Nazo Space`,
+      description: `${creator.name}님이 제작한 나조 모음입니다.`,
+    },
+  };
 }
 
 export default async function CreatorPage({ params }: CreatorPageProps) {

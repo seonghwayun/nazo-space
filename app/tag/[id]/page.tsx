@@ -6,10 +6,33 @@ import Nazo from "@/models/nazo";
 import { NazoCard } from "@/components/nazo/nazo-card";
 import { notFound } from "next/navigation";
 
+import { Metadata } from "next";
+
 interface TagPageProps {
   params: Promise<{
     id: string;
   }>;
+}
+
+export async function generateMetadata({ params }: TagPageProps): Promise<Metadata> {
+  const { id } = await params;
+  await connectToDatabase();
+  const tag = await Tag.findById(id);
+
+  if (!tag) {
+    return {
+      title: "태그를 찾을 수 없음 | Nazo Space",
+    };
+  }
+
+  return {
+    title: `#${tag.name} - 태그 | Nazo Space`,
+    description: `#${tag.name} 태그가 포함된 나조 모음입니다.`,
+    openGraph: {
+      title: `#${tag.name} | Nazo Space`,
+      description: `#${tag.name} 태그가 포함된 나조 모음입니다.`,
+    },
+  };
 }
 
 export default async function TagPage({ params }: TagPageProps) {
