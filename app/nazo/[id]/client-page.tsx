@@ -220,7 +220,7 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
             className="object-cover"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
 
           <div className="fixed top-4 left-4 z-50">
             <Button
@@ -256,19 +256,19 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
             </Button>
           </div>
 
-          <div className="absolute bottom-0 left-0 w-full p-6 pt-12">
-            <h1 className="text-3xl font-bold text-foreground mb-2">{nazo.originalTitle}</h1>
-            <div className="text-sm flex flex-wrap gap-2 items-center mb-1">
+          <div className="absolute bottom-0 left-0 w-full p-6 pt-12 z-10">
+            <h1 className="text-3xl font-bold text-white mb-2 drop-shadow-md">{nazo.originalTitle}</h1>
+            <div className="text-sm flex flex-wrap gap-2 items-center mb-1 text-white/90 drop-shadow-sm">
               <span>
-                평균평점 <span className="font-bold">{nazo.averageRate ? nazo.averageRate.toFixed(1) : "0.0"}</span>
-                <span className="text-muted-foreground ml-1 font-normal">({nazo.rateCount || 0})</span>
+                평균평점 <span className="font-bold text-white">{nazo.averageRate ? nazo.averageRate.toFixed(1) : "0.0"}</span>
+                <span className="text-white/70 ml-1 font-normal">({nazo.rateCount || 0})</span>
               </span>
               <span>•</span>
-              <span>표기난이도 <span className="font-bold">{nazo.difficulty ? nazo.difficulty : "없음"}</span></span>
+              <span>표기난이도 <span className="font-bold text-white">{nazo.difficulty ? nazo.difficulty : "없음"}</span></span>
               <span>•</span>
               <span>{nazo.estimatedTime || "Untimed"}</span>
             </div>
-            <div className="text-xs text-muted-foreground mb-1">
+            <div className="text-xs text-white/70 mb-1 drop-shadow-sm">
               {nazo.tags && nazo.tags.length > 0 && (
                 <span>{nazo.tags.map(t => (typeof t === 'object' && 'name' in t ? (t as any).name : t)).join(' · ')}</span>
               )}
