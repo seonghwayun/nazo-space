@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter, useParams } from "next/navigation";
+import Link from "next/link";
 // import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ImageIcon, Loader2, PenTool, Share2, Plus, Edit3, Eye, MoreHorizontal, Star, Pencil, Globe } from "lucide-react";
@@ -416,27 +417,16 @@ export default function NazoDetailPage() {
               <div className="flex flex-wrap gap-2">
                 {nazo.creators.map((creator: any) => {
                   const bgColor = stringToColor(creator._id || creator.name);
-                  return creator.url ? (
-                    <a
+                  return (
+                    <Link
                       key={creator._id}
-                      href={creator.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      href={`/creator/${creator._id}`}
                       className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-black/5 hover:opacity-80 transition-opacity"
                       style={{ backgroundColor: bgColor }}
                     >
                       <PenTool className="h-3 w-3 opacity-60" />
                       <span className="text-sm font-medium">{creator.name}</span>
-                    </a>
-                  ) : (
-                    <div
-                      key={creator._id}
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-black/5"
-                      style={{ backgroundColor: bgColor }}
-                    >
-                      <PenTool className="h-3 w-3 opacity-60" />
-                      <span className="text-sm font-medium">{creator.name}</span>
-                    </div>
+                    </Link>
                   );
                 })}
               </div>

@@ -12,7 +12,7 @@ export function Header() {
 
   // Hide header on nazo detail page but show on others
   // Check if pathname starts with /nazo/ followed by an ID
-  if (pathname?.startsWith("/nazo/") && pathname.split("/").length > 2) {
+  if ((pathname?.startsWith("/nazo/") && pathname.split("/").length > 2) || pathname?.startsWith("/creator/")) {
     return null;
   }
 

@@ -122,12 +122,14 @@ export default function SearchPage() {
               ))}
 
               {activeTab === "creator" && results.creators.map((creator) => (
-                <div key={String(creator._id)} className="flex items-center gap-3 p-4 border rounded-lg bg-card text-card-foreground">
-                  <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                    <span className="text-lg">👤</span>
+                <Link key={String(creator._id)} href={`/creator/${creator._id}`}>
+                  <div className="flex items-center gap-3 p-4 border rounded-lg bg-card text-card-foreground hover:bg-accent/50 transition-colors">
+                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                      <span className="text-lg">👤</span>
+                    </div>
+                    <span className="font-medium">{creator.name}</span>
                   </div>
-                  <span className="font-medium">{creator.name}</span>
-                </div>
+                </Link>
               ))}
 
               {activeTab === "tag" && results.tags.map((tag) => (
