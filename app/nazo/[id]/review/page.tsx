@@ -62,7 +62,8 @@ export default function NazoReviewPage() {
 
       if (!res.ok) throw new Error("Failed to save review");
 
-      router.push(`/nazo/${id}`);
+      router.refresh();
+      router.back();
     } catch (error) {
       console.error("Failed to save review:", error);
     } finally {
@@ -80,7 +81,8 @@ export default function NazoReviewPage() {
 
       if (!res.ok) throw new Error("Failed to delete review");
 
-      router.push(`/nazo/${id}`);
+      router.refresh();
+      router.back();
     } catch (error) {
       console.error("Failed to remove review:", error);
     } finally {
@@ -108,7 +110,7 @@ export default function NazoReviewPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8 pb-40 flex flex-col max-w-2xl mx-auto relative">
+    <div className="min-h-screen bg-background p-4 md:p-8 pb-10 flex flex-col max-w-2xl mx-auto relative">
       {/* Header */}
       <div className="fixed top-0 left-0 right-0 h-14 bg-background border-b z-50 flex items-center justify-between px-4">
         <Button
@@ -189,8 +191,8 @@ export default function NazoReviewPage() {
         {(review || memo) && (
           <div className="pt-4 border-t">
             <Button
-              variant="ghost"
-              className="w-full text-red-500 hover:text-red-600 hover:bg-red-50"
+              variant="outline"
+              className="w-full text-red-500 hover:text-red-600 hover:bg-red-50 border-red-200"
               onClick={handleRemove}
               disabled={isSaving || isRemoving}
             >
