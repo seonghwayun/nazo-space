@@ -103,8 +103,15 @@ export default function MyPage() {
               <Skeleton className="h-6 w-32" />
               <Skeleton className="h-4 w-12" />
             </div>
-            <div className="flex gap-4 overflow-x-hidden">
-              {[1, 2, 3].map(i => <NazoPortraitCardSkeleton key={i} />)}
+            <div className="flex overflow-x-auto gap-4 pb-4 -mx-4 px-4 scrollbar-hide">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="w-[140px] flex-shrink-0">
+                  <NazoPortraitCardSkeleton className="w-full" hideRating />
+                  <div className="mt-1 flex items-center justify-center">
+                    <Skeleton className="h-4 w-20" />
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -243,7 +250,14 @@ export default function MyPage() {
 
           {isRatedLoading ? (
             <div className="flex overflow-x-auto gap-4 pb-4 -mx-4 px-4 scrollbar-hide">
-              {[1, 2, 3, 4, 5].map(i => <NazoPortraitCardSkeleton key={i} />)}
+              {[1, 2, 3, 4, 5].map(i => (
+                <div key={i} className="w-[140px] flex-shrink-0">
+                  <NazoPortraitCardSkeleton className="w-full" hideRating />
+                  <div className="mt-1 flex items-center justify-center">
+                    <Skeleton className="h-4 w-20" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : ratedNazos.length > 0 ? (
             <div className="flex overflow-x-auto gap-4 pb-4 -mx-4 px-4 scrollbar-hide">
