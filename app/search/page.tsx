@@ -14,7 +14,9 @@ import { NazoCardSkeleton } from "@/components/nazo/nazo-card-skeleton";
 
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
-export default function SearchPage() {
+import { Suspense } from "react";
+
+function SearchContent() {
   const {
     query,
     setQuery,
@@ -186,5 +188,13 @@ export default function SearchPage() {
         </div>
       </div>
     </MainLayout>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense>
+      <SearchContent />
+    </Suspense>
   );
 }
