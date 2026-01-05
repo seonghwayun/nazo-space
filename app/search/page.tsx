@@ -12,6 +12,8 @@ import { useSearchContext } from "@/contexts/search-context";
 import { NazoCard } from "@/components/nazo/nazo-card";
 import { NazoCardSkeleton } from "@/components/nazo/nazo-card-skeleton";
 
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
+
 export default function SearchPage() {
   const {
     query,
@@ -22,8 +24,19 @@ export default function SearchPage() {
     setLastSearchedQuery,
   } = useSearchContext();
 
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const activeTab = (searchParams.get("tab") as "nazo" | "creator" | "tag") || "nazo";
+
+  const handleTabChange = (tab: "nazo" | "creator" | "tag") => {
+    const params = new URLSearchParams(searchParams);
+    params.set("tab", tab);
+    router.replace(`${pathname}?${params.toString()}`);
+  };
+
   const [isLoading, setIsLoading] = React.useState(false);
-  const [activeTab, setActiveTab] = React.useState<"nazo" | "creator" | "tag">("nazo");
   const debouncedQuery = useDebounce(query, 500);
 
   React.useEffect(() => {
@@ -42,8 +55,6 @@ export default function SearchPage() {
       try {
         const response = await fetch(`/api/nazo/search?q=${encodeURIComponent(debouncedQuery)}`);
         const data = await response.json();
-        // The API now returns { nazos: [], creators: [], tags: [] }
-        // If the API returns the old format { results: [] }, handle gracefully if needed, but we updated API already.
         setResults(data);
       } catch (error) {
         console.error("Failed to search:", error);
@@ -69,7 +80,6 @@ export default function SearchPage() {
         results.tags;
 
   return (
-
     <MainLayout fullWidth className="flex flex-col">
       {/* Header Section (Centered) */}
       <div className="w-full border-b bg-background shrink-0 z-10">
@@ -90,7 +100,7 @@ export default function SearchPage() {
             <button
               className={`flex-1 pb-3 text-sm font-medium transition-colors relative ${activeTab === "nazo" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
                 }`}
-              onClick={() => setActiveTab("nazo")}
+              onClick={() => handleTabChange("nazo")}
             >
               나조
               {activeTab === "nazo" && (
@@ -100,7 +110,7 @@ export default function SearchPage() {
             <button
               className={`flex-1 pb-3 text-sm font-medium transition-colors relative ${activeTab === "creator" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
                 }`}
-              onClick={() => setActiveTab("creator")}
+              onClick={() => handleTabChange("creator")}
             >
               제작자
               {activeTab === "creator" && (
@@ -110,7 +120,7 @@ export default function SearchPage() {
             <button
               className={`flex-1 pb-3 text-sm font-medium transition-colors relative ${activeTab === "tag" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
                 }`}
-              onClick={() => setActiveTab("tag")}
+              onClick={() => handleTabChange("tag")}
             >
               태그
               {activeTab === "tag" && (
