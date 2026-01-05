@@ -41,21 +41,50 @@ export default function Home() {
       <MainLayout>
         <div className="h-full overflow-y-auto">
           <div className="max-w-6xl mx-auto p-4 space-y-8">
-            {[1, 2, 3].map((sectionIndex) => (
-              <section key={sectionIndex}>
-                <div className="flex items-center justify-between mb-4 px-1">
-                  <div className="flex items-center gap-2">
-                    <Skeleton className="h-5 w-5 rounded-full" />
-                    <Skeleton className="h-6 w-32" />
-                  </div>
+            {/* Recently Added Loading */}
+            <section>
+              <div className="flex items-center justify-between mb-4 px-1">
+                <div className="flex items-center gap-2">
+                  <Plus className="h-5 w-5 text-primary" />
+                  <h2 className="text-xl font-bold tracking-tight">최근 추가된 나조</h2>
                 </div>
-                <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <NazoPortraitCardSkeleton key={i} />
-                  ))}
+              </div>
+              <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <NazoPortraitCardSkeleton key={i} />
+                ))}
+              </div>
+            </section>
+
+            {/* Top Rated Loading */}
+            <section>
+              <div className="flex items-center justify-between mb-4 px-1">
+                <div className="flex items-center gap-2">
+                  <Star className="h-5 w-5 text-primary" />
+                  <h2 className="text-xl font-bold tracking-tight">평점이 높은 나조</h2>
                 </div>
-              </section>
-            ))}
+              </div>
+              <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <NazoPortraitCardSkeleton key={i} />
+                ))}
+              </div>
+            </section>
+
+            {/* Recently Reviewed Loading */}
+            <section>
+              <div className="flex items-center justify-between mb-4 px-1">
+                <div className="flex items-center gap-2">
+                  <PenTool className="h-5 w-5 text-primary" />
+                  <h2 className="text-xl font-bold tracking-tight">최근 리뷰가 등록된 나조</h2>
+                </div>
+              </div>
+              <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <NazoPortraitCardSkeleton key={i} />
+                ))}
+              </div>
+            </section>
           </div>
         </div>
       </MainLayout>

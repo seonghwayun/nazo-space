@@ -6,9 +6,9 @@ export function NazoPortraitCardSkeleton() {
       <div className="relative aspect-[2/3] w-full">
         <Skeleton className="h-full w-full rounded-lg" />
       </div>
-      <div className="space-y-1.5 px-0.5">
+      <div className="space-y-1 px-0.5">
         <Skeleton className="h-5 w-3/4" />
-        <Skeleton className="h-4 w-12" />
+        <Skeleton className="h-5 w-12" />
       </div>
     </div>
   )
