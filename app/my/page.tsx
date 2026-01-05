@@ -8,6 +8,8 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { NazoPortraitCard } from "@/components/nazo/nazo-portrait-card";
+import { NazoPortraitCardSkeleton } from "@/components/nazo/nazo-portrait-card-skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronRight, Pencil, Check, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
@@ -86,9 +88,25 @@ export default function MyPage() {
 
   if (status === "loading") {
     return (
-      <MainLayout>
-        <div className="flex items-center justify-center h-full">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <MainLayout padded>
+        <div className="flex flex-col gap-8 h-full">
+          <div className="flex items-center gap-4 p-4 bg-card rounded-lg border shadow-sm">
+            <Skeleton className="w-16 h-16 rounded-full" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-4 w-48" />
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-4 w-12" />
+            </div>
+            <div className="flex gap-4 overflow-x-hidden">
+              {[1, 2, 3].map(i => <NazoPortraitCardSkeleton key={i} />)}
+            </div>
+          </div>
         </div>
       </MainLayout>
     );
@@ -178,8 +196,8 @@ export default function MyPage() {
           </div>
 
           {isRatedLoading ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <div className="flex overflow-x-auto gap-4 pb-4 -mx-4 px-4 scrollbar-hide">
+              {[1, 2, 3, 4, 5].map(i => <NazoPortraitCardSkeleton key={i} />)}
             </div>
           ) : ratedNazos.length > 0 ? (
             <div className="flex overflow-x-auto gap-4 pb-4 -mx-4 px-4 scrollbar-hide">

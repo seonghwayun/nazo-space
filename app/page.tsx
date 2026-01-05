@@ -3,8 +3,10 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { MainLayout } from "@/components/layout/main-layout";
+import { NazoPortraitCardSkeleton } from "@/components/nazo/nazo-portrait-card-skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 import { NazoPortraitCard } from "@/components/nazo/nazo-portrait-card";
-import { Loader2, Plus, Star, PenTool } from "lucide-react";
+import { Plus, Star, PenTool } from "lucide-react";
 import { INazo } from "@/models/nazo";
 import { Button } from "@/components/ui/button";
 
@@ -37,8 +39,24 @@ export default function Home() {
   if (isLoading) {
     return (
       <MainLayout>
-        <div className="flex items-center justify-center h-full">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <div className="h-full overflow-y-auto">
+          <div className="max-w-6xl mx-auto p-4 space-y-8">
+            {[1, 2, 3].map((sectionIndex) => (
+              <section key={sectionIndex}>
+                <div className="flex items-center justify-between mb-4 px-1">
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-5 w-5 rounded-full" />
+                    <Skeleton className="h-6 w-32" />
+                  </div>
+                </div>
+                <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <NazoPortraitCardSkeleton key={i} />
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
         </div>
       </MainLayout>
     );

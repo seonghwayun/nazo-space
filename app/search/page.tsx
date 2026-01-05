@@ -6,9 +6,11 @@ import * as React from "react";
 import { Input } from "@/components/ui/input";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Search, Loader2, ImageIcon, Star, Gauge, Clock } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useSearchContext } from "@/contexts/search-context";
 import { NazoCard } from "@/components/nazo/nazo-card";
+import { NazoCardSkeleton } from "@/components/nazo/nazo-card-skeleton";
 
 export default function SearchPage() {
   const {
@@ -54,7 +56,11 @@ export default function SearchPage() {
     fetchResults();
   }, [debouncedQuery]);
 
-  const isSearching = query.length > 0 && (query !== debouncedQuery || (debouncedQuery !== lastSearchedQuery && isLoading));
+  const isSearching = query.length > 0 && (
+    query !== debouncedQuery ||
+    isLoading ||
+    debouncedQuery !== lastSearchedQuery
+  );
 
   // Determine which list to show
   const currentList =
@@ -111,9 +117,22 @@ export default function SearchPage() {
         </div>
 
         <div className="flex-1 overflow-y-auto min-h-0 pt-2">
+
+
           {isSearching ? (
-            <div className="flex items-center justify-center h-40">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <div className="grid gap-4">
+              {activeTab === "nazo" ? (
+                [1, 2, 3, 4, 5].map((i) => <NazoCardSkeleton key={i} />)
+              ) : (
+                [1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="flex items-center gap-3 p-4 border rounded-lg bg-card">
+                    {activeTab === "creator" && <Skeleton className="w-10 h-10 rounded-full shrink-0" />}
+                    <div className="space-y-2 flex-1">
+                      <Skeleton className="h-5 w-1/3" />
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           ) : currentList?.length > 0 ? (
             <div className="grid gap-4">
