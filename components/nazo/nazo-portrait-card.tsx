@@ -40,6 +40,7 @@ export function NazoPortraitCard({ nazo, rank, hideRating, className }: NazoPort
             <div className="flex items-center gap-1 text-sm text-yellow-600 px-0.5">
               <Star className="w-3.5 h-3.5 fill-yellow-500 text-yellow-500" />
               <span>{nazo.averageRate ? nazo.averageRate.toFixed(1) : "0.0"}</span>
+              <span className="text-muted-foreground ml-0.5 text-xs">({nazo.rateCount || 0})</span>
             </div>
           )}
         </div>
