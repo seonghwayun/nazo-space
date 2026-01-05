@@ -32,27 +32,27 @@ export function NazoCard({ nazo, myRate }: NazoCardProps) {
           )}
 
           {/* Metric Badges */}
-          <div className="flex flex-wrap gap-2 mt-2">
+          <div className="flex flex-wrap gap-2 mt-2.5">
             {/* Rating Badge */}
-            <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-yellow-50 text-yellow-700 text-xs font-semibold">
-              <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
-              <span>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-100 shadow-sm text-xs font-medium">
+              <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+              <span className="font-semibold">
                 {myRate !== undefined
                   ? myRate
                   : nazo.averageRate ? nazo.averageRate.toFixed(1) : "0.0"}
               </span>
-              {myRate !== undefined && <span className="text-[10px] font-normal opacity-80 ml-0.5">(내 점수)</span>}
+              {myRate !== undefined && <span className="text-[10px] font-normal opacity-70 ml-px">(내 점수)</span>}
             </div>
 
             {/* Difficulty Badge */}
-            <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-rose-50 text-rose-600 text-xs font-semibold">
-              <Gauge className="w-3 h-3" />
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-100 shadow-sm text-xs font-medium">
+              <Gauge className="w-3.5 h-3.5 text-rose-500" />
               <span>{nazo.difficulty || "미정"}</span>
             </div>
 
             {/* Time Badge */}
-            <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-gray-100 text-gray-600 text-xs font-semibold">
-              <Clock className="w-3 h-3" />
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-50 text-slate-700 border border-slate-100 shadow-sm text-xs font-medium">
+              <Clock className="w-3.5 h-3.5 text-slate-500" />
               <span>{nazo.estimatedTime || "미정"}</span>
             </div>
           </div>
