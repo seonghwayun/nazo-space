@@ -52,7 +52,7 @@ export default async function TagPage({ params }: TagPageProps) {
 
   return (
     <MainLayout padded>
-      <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-4">
         <div className="flex items-center">
           <BackButton
             className="!h-14 !w-14 rounded-full"

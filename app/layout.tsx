@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Header } from "@/components/layout/header";
+
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { Providers } from "@/components/providers";
 
@@ -52,7 +52,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased h-[100dvh] flex flex-col bg-background text-foreground overflow-hidden`}
       >
         <Providers>
-          <Header />
+
           <div className="flex-1 w-full overflow-y-auto">
             {children}
           </div>

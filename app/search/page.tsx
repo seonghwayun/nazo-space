@@ -69,56 +69,61 @@ export default function SearchPage() {
         results.tags;
 
   return (
-    <MainLayout padded>
-      <div className="flex flex-col gap-4 h-full">
-        <div className="relative shrink-0">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="검색어를 입력하세요..."
-            className="pl-9 w-full bg-background"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
+
+    <MainLayout fullWidth className="flex flex-col">
+      {/* Header Section (Centered) */}
+      <div className="w-full border-b bg-background shrink-0 z-10">
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 md:px-8 pt-6 md:pt-10 space-y-4">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="검색어를 입력하세요..."
+              className="pl-9 w-full bg-background"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
+
+          {/* Tab Navigation */}
+          <div className="flex">
+            <button
+              className={`flex-1 pb-3 text-sm font-medium transition-colors relative ${activeTab === "nazo" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              onClick={() => setActiveTab("nazo")}
+            >
+              나조
+              {activeTab === "nazo" && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground" />
+              )}
+            </button>
+            <button
+              className={`flex-1 pb-3 text-sm font-medium transition-colors relative ${activeTab === "creator" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              onClick={() => setActiveTab("creator")}
+            >
+              제작자
+              {activeTab === "creator" && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground" />
+              )}
+            </button>
+            <button
+              className={`flex-1 pb-3 text-sm font-medium transition-colors relative ${activeTab === "tag" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              onClick={() => setActiveTab("tag")}
+            >
+              태그
+              {activeTab === "tag" && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground" />
+              )}
+            </button>
+          </div>
         </div>
+      </div>
 
-        {/* Tab Navigation */}
-        <div className="flex border-b shrink-0">
-          <button
-            className={`flex-1 pb-3 text-sm font-medium transition-colors relative ${activeTab === "nazo" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-              }`}
-            onClick={() => setActiveTab("nazo")}
-          >
-            나조
-            {activeTab === "nazo" && (
-              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground" />
-            )}
-          </button>
-          <button
-            className={`flex-1 pb-3 text-sm font-medium transition-colors relative ${activeTab === "creator" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-              }`}
-            onClick={() => setActiveTab("creator")}
-          >
-            제작자
-            {activeTab === "creator" && (
-              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground" />
-            )}
-          </button>
-          <button
-            className={`flex-1 pb-3 text-sm font-medium transition-colors relative ${activeTab === "tag" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-              }`}
-            onClick={() => setActiveTab("tag")}
-          >
-            태그
-            {activeTab === "tag" && (
-              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground" />
-            )}
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto min-h-0 pt-2">
-
-
+      {/* Scrollable Content Area (Full Width) */}
+      <div className="flex-1 overflow-y-auto w-full min-h-0">
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 md:px-8 py-6">
           {isSearching ? (
             <div className="grid gap-4">
               {activeTab === "nazo" ? (
