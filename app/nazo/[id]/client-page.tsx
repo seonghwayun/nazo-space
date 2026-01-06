@@ -123,6 +123,11 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
   const handleSaveRate = async (rate: number) => {
     if (!checkAuth()) return;
     if (!id) return;
+
+    // Optimistic Update
+    const previousRate = userRate;
+    setUserRate(rate);
+
     try {
       // Save Rate
       const rateRes = await fetch(`/api/rate/nazo/${id}`, {
@@ -132,11 +137,17 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
       });
 
       if (!rateRes.ok) throw new Error("Failed to save rate");
+
+      // Ideally the server returns the same rate we sent, or updated stats.
+      // We can update nazo stats here if the API returned them, but for userRate, we already set it.
       const rateData = await rateRes.json();
+      // Ensure state is consistent with server (optional, but good practice if server sanitizes input)
       setUserRate(rateData.rate);
     } catch (error) {
       console.error(error);
-      throw error;
+      // Revert on failure
+      setUserRate(previousRate);
+      alert("평점 저장에 실패했습니다.");
     }
   };
 
