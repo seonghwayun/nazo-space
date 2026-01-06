@@ -336,11 +336,6 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
               <span>•</span>
               <span>예상시간 <span className="font-bold text-white">{nazo.estimatedTime || "불명"}</span></span>
             </div>
-            <div className="text-xs text-white/70 mb-1 drop-shadow-sm">
-              {nazo.tags && nazo.tags.length > 0 && (
-                <span>{nazo.tags.map(t => (typeof t === 'object' && 'name' in t ? (t as any).name : t)).join(' · ')}</span>
-              )}
-            </div>
           </div>
         </div>
 
