@@ -334,9 +334,9 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
         {/* Action Buttons Row */}
         {/* User Interaction Section */}
         <div className="p-6 border-b border-border bg-background">
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-4">
             {/* Rating Stars - Centered & Large (Moved to Top) */}
-            <div className="flex justify-center items-center gap-2 pt-2 pb-2">
+            <div className="flex justify-center items-center gap-2">
               {[1, 2, 3, 4, 5].map((index) => {
                 // Calculate fill for 0.5 steps
                 const fill = Math.max(0, Math.min(1, (userRate || 0) - (index - 1)));
@@ -375,6 +375,8 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
                 )
               })}
             </div>
+
+            <div className="h-px w-full bg-border/60" />
 
             {/* Review / Comment Area */}
             <div className="space-y-4">
