@@ -41,6 +41,7 @@ interface ClientPageProps {
 }
 
 import { ShareModal } from "@/components/nazo/share-modal";
+import { ReviewListPreview } from "@/components/review/review-list-preview";
 
 // ... (omitted)
 
@@ -526,6 +527,8 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
               </div>
             </div>
           )}
+
+          <ReviewListPreview nazoId={nazo._id as unknown as string} />
         </div>
       </div>
 
