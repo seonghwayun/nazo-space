@@ -32,7 +32,9 @@ export async function GET(req: NextRequest) {
 
     // 2. Fetch corresponding Nazos
     const nazoIds = rates.map((r) => r.nazoId);
-    const nazos = await Nazo.find({ _id: { $in: nazoIds } }).lean();
+    const nazos = await Nazo.find({ _id: { $in: nazoIds } })
+      .select("originalTitle imageUrl averageRate rateCount")
+      .lean();
 
     // 3. Map Nazo to Rate (to preserve sort order and structure)
     // Create a map for quick lookup

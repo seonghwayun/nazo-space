@@ -28,7 +28,8 @@ export async function GET(request: NextRequest) {
         ],
       })
         .limit(20)
-        .populate("creators")
+        .select("originalTitle translatedTitle imageUrl averageRate rateCount creators tags difficulty estimatedTime")
+        .populate("creators", "name")
         .lean(),
     ]);
 

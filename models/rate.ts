@@ -21,6 +21,8 @@ const RateSchema = new Schema<IRate>(
 
 // Ensure a user can only rate a nazo once
 RateSchema.index({ userId: 1, nazoId: 1 }, { unique: true });
+// Optimize "My Rated Nazos" sort query
+RateSchema.index({ userId: 1, updatedAt: -1 });
 
 const Rate: Model<IRate> =
   mongoose.models.Rate || mongoose.model<IRate>("Rate", RateSchema);

@@ -335,45 +335,57 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
         {/* User Interaction Section */}
         <div className="p-6 border-b border-border bg-background">
           <div className="flex flex-col gap-4">
-            {/* Rating Stars - Centered & Large (Moved to Top) */}
-            <div className="flex justify-center items-center gap-2">
-              {[1, 2, 3, 4, 5].map((index) => {
-                // Calculate fill for 0.5 steps
-                const fill = Math.max(0, Math.min(1, (userRate || 0) - (index - 1)));
-                return (
-                  <div
-                    key={index}
-                    className="relative cursor-pointer w-10 h-10 transition-transform active:scale-95"
-                  >
-                    {/* Background Star (Gray) */}
-                    <Star
-                      className="absolute inset-0 w-full h-full text-transparent fill-muted-foreground/20"
-                      strokeWidth={0}
-                    />
+            {/* Rating Stars - Fancy Pill Design */}
+            <div className="flex justify-center items-center py-1">
+              <div className="flex items-center gap-4 px-6 py-1.5 bg-gradient-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 border rounded-full shadow-sm hover:shadow-md transition-all duration-300">
+                <div className="flex gap-1.5">
+                  {[1, 2, 3, 4, 5].map((index) => {
+                    // Calculate fill for 0.5 steps
+                    const fill = Math.max(0, Math.min(1, (userRate || 0) - (index - 1)));
+                    return (
+                      <div
+                        key={index}
+                        className="relative cursor-pointer w-8 h-8 transition-transform hover:scale-110 active:scale-95"
+                      >
+                        {/* Background Star (Gray) */}
+                        <Star
+                          className="absolute inset-0 w-full h-full text-transparent fill-muted-foreground/20"
+                          strokeWidth={0}
+                        />
 
-                    {/* Foreground Star (Yellow) - Clipped */}
-                    <div
-                      className="absolute inset-0 overflow-hidden"
-                      style={{ width: `${fill * 100}%` }}
-                    >
-                      <Star
-                        className="w-10 h-10 text-transparent fill-yellow-400"
-                        strokeWidth={0}
-                      />
-                    </div>
+                        {/* Foreground Star (Yellow) - Clipped */}
+                        <div
+                          className="absolute inset-0 overflow-hidden"
+                          style={{ width: `${fill * 100}%` }}
+                        >
+                          <Star
+                            className="w-8 h-8 text-transparent fill-yellow-400 drop-shadow-sm"
+                            strokeWidth={0}
+                          />
+                        </div>
 
-                    {/* Interaction Layers */}
-                    <div
-                      className="absolute inset-y-0 left-0 w-1/2 z-10"
-                      onClick={() => handleSaveRate(index - 0.5)}
-                    />
-                    <div
-                      className="absolute inset-y-0 right-0 w-1/2 z-10"
-                      onClick={() => handleSaveRate(index)}
-                    />
-                  </div>
-                )
-              })}
+                        {/* Interaction Layers */}
+                        <div
+                          className="absolute inset-y-0 left-0 w-1/2 z-10"
+                          onClick={() => handleSaveRate(index - 0.5)}
+                        />
+                        <div
+                          className="absolute inset-y-0 right-0 w-1/2 z-10"
+                          onClick={() => handleSaveRate(index)}
+                        />
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* Vertical Divider */}
+                <div className="w-px h-6 bg-border/50" />
+
+                {/* Score Number */}
+                <span className="text-xl font-bold tabular-nums text-foreground min-w-[1.8em] text-center tracking-tight">
+                  {userRate ? userRate.toFixed(1) : <span className="text-muted-foreground/30 text-lg">-</span>}
+                </span>
+              </div>
             </div>
 
             <div className="h-px w-full bg-border/60" />
