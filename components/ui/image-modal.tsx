@@ -19,7 +19,7 @@ export function ImageModal({ isOpen, onClose, imageUrl, alt = "Image" }: ImageMo
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent showCloseButton={false} overlayClassName="bg-black/90" className="w-fit h-fit p-0 bg-transparent border-none shadow-none max-w-none overflow-hidden outline-none">
+      <DialogContent showCloseButton={false} overlayClassName="bg-black/90" className="w-fit h-fit p-0 bg-transparent border-none shadow-none max-w-none outline-none">
         <VisuallyHidden><DialogTitle>Image View</DialogTitle></VisuallyHidden>
 
         <div className="flex flex-col items-end gap-2">
