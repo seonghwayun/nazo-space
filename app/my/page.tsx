@@ -282,25 +282,27 @@ export default function MyPage() {
           )}
         </div>
 
-        <Link href="mailto:respace.cc@gmail.com" className="w-full">
-          <Button variant="outline" className="w-full">
-            <Mail className="mr-2 h-4 w-4" />
-            문의하기
-          </Button>
-        </Link>
-
-        <Button variant="outline" onClick={() => signOut()} className="text-red-500 hover:text-red-600 hover:bg-red-50 border-red-200">
-          <LogOut className="mr-2 h-4 w-4" />
-          로그아웃
-        </Button>
-
-        {session.user?.isAdmin && (
-          <Link href="/admin" className="w-full">
-            <Button className="w-full" variant="default">
-              나조 관리 (관리자)
+        <div className="flex flex-col gap-3">
+          <Link href="mailto:respace.cc@gmail.com" className="w-full">
+            <Button variant="outline" className="w-full">
+              <Mail className="mr-2 h-4 w-4" />
+              문의하기
             </Button>
           </Link>
-        )}
+
+          <Button variant="outline" onClick={() => signOut()} className="text-red-500 hover:text-red-600 hover:bg-red-50 border-red-200">
+            <LogOut className="mr-2 h-4 w-4" />
+            로그아웃
+          </Button>
+
+          {session.user?.isAdmin && (
+            <Link href="/admin" className="w-full">
+              <Button className="w-full" variant="default">
+                나조 관리 (관리자)
+              </Button>
+            </Link>
+          )}
+        </div>
       </div>
     </MainLayout>
   );
