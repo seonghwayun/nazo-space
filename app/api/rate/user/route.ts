@@ -20,27 +20,33 @@ export async function GET(req: NextRequest) {
     const userId = (session as any).user.id;
     await connectToDatabase();
 
-    // 1. Find user's rates
+    // 1. Find user's rates (Optimized: select only needed fields, use lean)
     const rates = await Rate.find({ userId })
+      .select("nazoId rate updatedAt")
       .sort({ updatedAt: -1 })
       .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .lean();
 
     if (!rates.length) {
       return NextResponse.json({ results: [], hasMore: false });
     }
 
-    // 2. Fetch corresponding Nazos
-    const nazoIds = rates.map((r) => r.nazoId);
-    const nazos = await Nazo.find({ _id: { $in: nazoIds } })
-      .select("originalTitle imageUrl averageRate rateCount")
-      .lean();
+    // 2. Parallelize: Fetch corresponding Nazos AND Total Count
+    const nazoIds = rates.map((r: any) => r.nazoId);
 
-    // 3. Map Nazo to Rate (to preserve sort order and structure)
+    const [nazos, totalCount] = await Promise.all([
+      Nazo.find({ _id: { $in: nazoIds } })
+        .select("originalTitle imageUrl averageRate rateCount")
+        .lean(),
+      Rate.countDocuments({ userId })
+    ]);
+
+    // 3. Map Nazo to Rate
     // Create a map for quick lookup
     const nazosMap = new Map(nazos.map((n: any) => [n._id.toString(), n]));
 
-    const results = rates.map((r) => {
+    const results = rates.map((r: any) => {
       const nazo = nazosMap.get(r.nazoId.toString());
       if (!nazo) return null;
       return {
@@ -50,8 +56,6 @@ export async function GET(req: NextRequest) {
       };
     }).filter(item => item !== null);
 
-    // Check if there are more items
-    const totalCount = await Rate.countDocuments({ userId });
     const hasMore = totalCount > skip + limit;
 
     return NextResponse.json({ results, hasMore });
