@@ -42,6 +42,7 @@ interface ClientPageProps {
 
 import { ShareModal } from "@/components/nazo/share-modal";
 import { ReviewListPreview } from "@/components/review/review-list-preview";
+import { ImageModal } from "@/components/ui/image-modal";
 
 // ... (omitted)
 
@@ -57,6 +58,7 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false); // Edit modal state
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [isReviewExpanded, setIsReviewExpanded] = useState(false);
 
   useEffect(() => {
@@ -265,7 +267,10 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
     <div className="bg-background min-h-full relative">
       <div className="flex flex-col">
         {/* Hero Section */}
-        <div className="relative w-full h-[45vh] md:h-[55vh] shrink-0">
+        <div
+          className="relative w-full h-[45vh] md:h-[55vh] shrink-0 cursor-pointer group"
+          onClick={() => setIsImageModalOpen(true)}
+        >
           <Image
             src={nazo.imageUrl || `/api/image/${nazo._id}`}
             alt={nazo.originalTitle}
@@ -280,7 +285,10 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
               variant="ghost"
               size="icon"
               className="text-white hover:bg-white/20 rounded-full h-14 w-14"
-              onClick={() => router.back()}
+              onClick={(e) => {
+                e.stopPropagation();
+                router.back();
+              }}
             >
               <ChevronLeft className="!h-10 !w-10 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
             </Button>
@@ -292,7 +300,10 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
                 variant="ghost"
                 size="icon"
                 className="text-white hover:bg-white/20 rounded-full h-14 w-14"
-                onClick={() => setIsEditModalOpen(true)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsEditModalOpen(true);
+                }}
               >
                 <Pencil className="!h-6 !w-6 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
               </Button>
@@ -304,7 +315,10 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
               variant="ghost"
               size="icon"
               className="text-white hover:bg-white/20 rounded-full h-14 w-14"
-              onClick={() => setIsShareModalOpen(true)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsShareModalOpen(true);
+              }}
             >
               <Share2 className="!h-8 !w-8 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
             </Button>
@@ -556,6 +570,13 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
         url={typeof window !== "undefined" ? window.location.href : ""}
+      />
+
+      <ImageModal
+        isOpen={isImageModalOpen}
+        onClose={() => setIsImageModalOpen(false)}
+        imageUrl={nazo.imageUrl || `/api/image/${nazo._id}`}
+        alt={nazo.originalTitle}
       />
     </div>
   );
