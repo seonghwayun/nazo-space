@@ -22,7 +22,7 @@ const UserSchema = new Schema<IUser>(
 );
 
 // Index for faster lookup by userId
-UserSchema.index({ userId: 1 });
+// UserSchema.index({ userId: 1 }); // Removed redundant index
 
 const User: Model<IUser> =
   mongoose.models.User || mongoose.model<IUser>("User", UserSchema);
