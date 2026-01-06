@@ -317,9 +317,9 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
                 <span className="text-white/70 ml-1 font-normal">({nazo.rateCount || 0})</span>
               </span>
               <span>•</span>
-              <span>표기난이도 <span className="font-bold text-white">{nazo.difficulty ? nazo.difficulty : "없음"}</span></span>
+              <span>표기난이도 <span className="font-bold text-white">{nazo.difficulty ? nazo.difficulty : "불명"}</span></span>
               <span>•</span>
-              <span>{nazo.estimatedTime || "Untimed"}</span>
+              <span>예상시간 <span className="font-bold text-white">{nazo.estimatedTime || "불명"}</span></span>
             </div>
             <div className="text-xs text-white/70 mb-1 drop-shadow-sm">
               {nazo.tags && nazo.tags.length > 0 && (
