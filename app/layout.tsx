@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Noto_Sans_KR } from "next/font/google";
+import { Noto_Sans_KR, Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
 
 import { BottomNav } from "@/components/layout/bottom-nav";
@@ -9,6 +9,12 @@ const notoSansKr = Noto_Sans_KR({
   subsets: ["latin"],
   weight: ["100", "300", "400", "500", "700", "900"],
   variable: "--font-noto-sans-kr",
+});
+
+const notoSansJp = Noto_Sans_JP({
+  subsets: ["latin"],
+  weight: ["100", "300", "400", "500", "700", "900"],
+  variable: "--font-noto-sans-jp",
 });
 
 export const metadata: Metadata = {
@@ -45,7 +51,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${notoSansKr.variable} antialiased h-[100dvh] flex flex-col bg-background text-foreground overflow-hidden font-sans`}
+        className={`${notoSansKr.variable} ${notoSansJp.variable} antialiased h-[100dvh] flex flex-col bg-background text-foreground overflow-hidden font-sans`}
       >
         <Providers>
 
