@@ -10,7 +10,7 @@ interface NazoCardProps {
 
 export function NazoCard({ nazo, myRate }: NazoCardProps) {
   return (
-    <Link href={`/nazo/${nazo._id}`} className="block h-full">
+    <Link href={`/nazo/${nazo._id}`} className="block h-full min-w-0">
       <div className="flex gap-4 p-4 border rounded-lg bg-card text-card-foreground shadow-sm hover:bg-accent/50 transition-colors h-full">
         <div className="relative shrink-0 w-20 h-20 bg-muted rounded-md overflow-hidden flex items-center justify-center">
           <Image
