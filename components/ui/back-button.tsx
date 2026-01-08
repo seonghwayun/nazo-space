@@ -19,10 +19,10 @@ export function BackButton({ className, iconClassName, variant = "ghost", size =
     <Button
       variant={variant}
       size={size}
-      className={cn("h-10 w-10", className)}
+      className={cn("size-14", className)}
       onClick={() => router.back()}
     >
-      <ChevronLeft className={cn("h-6 w-6", iconClassName)} />
+      <ChevronLeft className={cn("size-10", iconClassName)} />
     </Button>
   );
 }

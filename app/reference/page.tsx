@@ -1,6 +1,6 @@
 import { MainLayout } from "@/components/layout/main-layout";
 import Link from "next/link";
-import { ChevronRight, Languages, Keyboard } from "lucide-react";
+import { ChevronRight, Languages, Keyboard, Map } from "lucide-react";
 
 export default function ReferencePage() {
   return (
@@ -41,6 +41,22 @@ export default function ReferencePage() {
               <h3 className="font-semibold">일본어 핸드폰 자판 (Flick)</h3>
               <p className="text-xs text-muted-foreground mt-0.5">
                 일본어 입력 시 사용하는 플릭 입력 배열입니다.
+              </p>
+            </div>
+            <ChevronRight className="h-5 w-5 text-muted-foreground" />
+          </Link>
+
+          <Link
+            href="/reference/prefectures"
+            className="flex items-center gap-4 p-4 bg-card rounded-xl border shadow-sm hover:shadow-md hover:bg-secondary/50 transition-all"
+          >
+            <div className="h-12 w-12 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0">
+              <Map className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold">도도부현 / 현청소재지</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                일본의 행정구역과 현청소재지 지도입니다.
               </p>
             </div>
             <ChevronRight className="h-5 w-5 text-muted-foreground" />
