@@ -11,6 +11,7 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { useSearchContext } from "@/contexts/search-context";
 import { NazoCard } from "@/components/nazo/nazo-card";
 import { NazoCardSkeleton } from "@/components/nazo/nazo-card-skeleton";
+import { INazo } from "@/models/nazo";
 
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
@@ -40,6 +41,74 @@ function SearchContent() {
 
   const [isLoading, setIsLoading] = React.useState(false);
   const debouncedQuery = useDebounce(query, 500);
+
+  // Feed State
+  const [feedNazos, setFeedNazos] = React.useState<INazo[]>([]);
+  const [page, setPage] = React.useState(1);
+  const [hasMore, setHasMore] = React.useState(true);
+  const [isFeedLoading, setIsFeedLoading] = React.useState(false);
+  const observerTarget = React.useRef(null);
+
+  const fetchFeed = React.useCallback(async (pageNum: number) => {
+    setIsFeedLoading(true);
+    try {
+      const res = await fetch(`/api/nazo?page=${pageNum}&limit=20`);
+      const data = await res.json();
+      if (data.data) {
+        if (pageNum === 1) {
+          setFeedNazos(data.data);
+        } else {
+          setFeedNazos((prev) => {
+            const existingIds = new Set(prev.map((n) => String(n._id)));
+            const newNazos = data.data.filter((n: INazo) => !existingIds.has(String(n._id)));
+            return [...prev, ...newNazos];
+          });
+        }
+        setHasMore(data.pagination.hasMore);
+      }
+    } catch (error) {
+      console.error("Failed to fetch feed:", error);
+    } finally {
+      setIsFeedLoading(false);
+    }
+  }, []);
+
+  // Initial fetch and reset when query cleared
+  React.useEffect(() => {
+    if (!debouncedQuery && activeTab === "nazo") {
+      // Only fetch if we haven't already (or if we want to refresh on clear).
+      // Let's simple check if empty.
+      if (feedNazos.length === 0) {
+        fetchFeed(1);
+      }
+    }
+  }, [debouncedQuery, activeTab, fetchFeed, feedNazos.length]);
+
+  // Add a way to reset feed if needed, or just let it persist?
+  // UseEffect for infinite scroll triggering page increment
+  React.useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isFeedLoading && !debouncedQuery && activeTab === "nazo") {
+          setPage((prev) => prev + 1);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasMore, isFeedLoading, debouncedQuery, activeTab]);
+
+  // Fetch when page changes
+  React.useEffect(() => {
+    if (page > 1 && !debouncedQuery && activeTab === "nazo") {
+      fetchFeed(page);
+    }
+  }, [page, debouncedQuery, activeTab, fetchFeed]);
 
   React.useEffect(() => {
     async function fetchResults() {
@@ -179,6 +248,19 @@ function SearchContent() {
           ) : query ? (
             <div className="flex flex-col items-center justify-center h-40 text-center">
               <p className="text-muted-foreground">"{query}"에 대한 {activeTab === "nazo" ? "나조" : activeTab === "creator" ? "제작자" : "태그"} 검색 결과가 없습니다.</p>
+            </div>
+          ) : activeTab === "nazo" ? (
+            /* Feed View for Nazo */
+            <div className="grid gap-4">
+              {feedNazos.map((nazo) => (
+                <NazoCard key={String(nazo._id)} nazo={nazo} />
+              ))}
+              {isFeedLoading && (
+                <div className="grid gap-4">
+                  {[1, 2].map((i) => <NazoCardSkeleton key={`loading-${i}`} />)}
+                </div>
+              )}
+              <div ref={observerTarget} className="h-4 w-full" />
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-40 text-center">
