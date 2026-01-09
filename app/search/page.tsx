@@ -257,7 +257,7 @@ function SearchContent() {
               ))}
               {isFeedLoading && (
                 <div className="grid gap-4">
-                  {[1, 2].map((i) => <NazoCardSkeleton key={`loading-${i}`} />)}
+                  {[1, 2, 3, 4, 5].map((i) => <NazoCardSkeleton key={`loading-${i}`} />)}
                 </div>
               )}
               <div ref={observerTarget} className="h-4 w-full" />
