@@ -227,12 +227,12 @@ export default function Home() {
       >
         {/* Pull Indicator */}
         <div
-          className="absolute top-0 left-0 right-0 flex justify-center items-start pointer-events-none transition-all duration-300 ease-out z-10"
+          className="absolute -top-[60px] left-0 right-0 flex justify-center items-start pointer-events-none transition-all duration-300 ease-out z-10"
           style={{
             height: '60px',
             opacity: pullY > 0 || isRefreshing ? 1 : 0,
             visibility: (pullY > 0 || isRefreshing) ? 'visible' : 'hidden',
-            transform: `translateY(${isRefreshing ? 20 : Math.max(pullY - 60, -60)}px)`
+            transform: `translateY(${isRefreshing ? 80 : pullY}px)`
           }}
         >
           <div className="bg-background/80 backdrop-blur-sm shadow-md rounded-full p-2 border">
