@@ -1,6 +1,6 @@
 import { MainLayout } from "@/components/layout/main-layout";
 import Link from "next/link";
-import { ChevronRight, Languages, Keyboard, Map } from "lucide-react";
+import { ChevronRight, Languages, Keyboard, Map, Shuffle } from "lucide-react";
 
 export default function ReferencePage() {
   return (
@@ -57,6 +57,24 @@ export default function ReferencePage() {
               <h3 className="font-semibold">도도부현 / 현청소재지</h3>
               <p className="text-xs text-muted-foreground mt-0.5">
                 일본의 행정구역과 현청소재지 지도입니다.
+              </p>
+            </div>
+            <ChevronRight className="h-5 w-5 text-muted-foreground" />
+          </Link>
+
+          <Link
+            href="https://wandsbox125.web.app/nazo-tools/chimata/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-4 p-4 bg-card rounded-xl border shadow-sm hover:shadow-md hover:bg-secondary/50 transition-all"
+          >
+            <div className="h-12 w-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0">
+              <Shuffle className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold">일본어 애너그램 사이트</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                문자의 순서를 바꾸어 단어를 만드는 도구입니다.
               </p>
             </div>
             <ChevronRight className="h-5 w-5 text-muted-foreground" />
