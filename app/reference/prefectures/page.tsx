@@ -42,6 +42,24 @@ export default function PrefecturesMapPage() {
             />
           </div>
         </div>
+
+        {/* Memory Song */}
+        <div className="space-y-3 pt-4">
+          <h2 className="font-semibold text-lg border-l-4 border-emerald-500 pl-3">도도부현 외우는 노래</h2>
+          <div className="rounded-xl overflow-hidden border shadow-sm bg-black aspect-video relative">
+            <iframe
+              width="100%"
+              height="100%"
+              src="https://www.youtube.com/embed/zFE0iqWm3kI?si=uGHvNjfepnwoGoVQ"
+              title="도도부현 외우는 노래"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerPolicy="strict-origin-when-cross-origin"
+              allowFullScreen
+              className="absolute inset-0"
+            />
+          </div>
+        </div>
       </div>
     </MainLayout>
   );
