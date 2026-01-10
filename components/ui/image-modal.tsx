@@ -19,13 +19,21 @@ export function ImageModal({ isOpen, onClose, imageUrl, alt = "Image" }: ImageMo
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent showCloseButton={false} overlayClassName="bg-black/90" className="w-fit h-fit p-0 bg-transparent border-none shadow-none max-w-none outline-none">
+      <DialogContent
+        showCloseButton={false}
+        overlayClassName="bg-black/90"
+        className="fixed inset-0 z-50 flex items-center justify-center w-[100dvw] h-[100dvh] max-w-none p-0 bg-transparent border-none shadow-none outline-none translate-x-0 translate-y-0 data-[state=open]:slide-in-from-bottom-0 data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100 data-[state=closed]:slide-out-to-bottom-0"
+        onClick={onClose}
+      >
         <VisuallyHidden><DialogTitle>Image View</DialogTitle></VisuallyHidden>
 
-        <div className="flex flex-col items-end gap-2">
+        <div
+          className="flex flex-col items-end gap-2 p-4"
+          onClick={(e) => e.stopPropagation()}
+        >
           <button
             onClick={onClose}
-            className="p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+            className="p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors backdrop-blur-sm"
           >
             <X className="h-6 w-6" />
           </button>
@@ -33,7 +41,7 @@ export function ImageModal({ isOpen, onClose, imageUrl, alt = "Image" }: ImageMo
           <img
             src={imageUrl}
             alt={alt}
-            className="max-w-[95vw] max-h-[80vh] object-contain rounded-md shadow-2xl"
+            className="max-w-[95vw] max-h-[85vh] object-contain rounded-md shadow-2xl"
           />
         </div>
       </DialogContent>
