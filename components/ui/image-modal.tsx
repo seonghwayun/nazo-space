@@ -22,7 +22,7 @@ export function ImageModal({ isOpen, onClose, imageUrl, alt = "Image" }: ImageMo
       <DialogContent
         showCloseButton={false}
         overlayClassName="bg-black/90"
-        className="fixed inset-0 z-50 flex items-center justify-center w-[100dvw] h-[100dvh] max-w-none p-0 bg-transparent border-none shadow-none outline-none translate-x-0 translate-y-0 data-[state=open]:slide-in-from-bottom-0 data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100 data-[state=closed]:slide-out-to-bottom-0"
+        className="fixed inset-0 z-50 flex items-center justify-center w-[100dvw] h-[100dvh] max-w-none sm:max-w-none p-0 bg-transparent border-none shadow-none outline-none translate-x-0 translate-y-0 data-[state=open]:slide-in-from-bottom-0 data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100 data-[state=closed]:slide-out-to-bottom-0"
         onClick={onClose}
       >
         <VisuallyHidden><DialogTitle>Image View</DialogTitle></VisuallyHidden>
