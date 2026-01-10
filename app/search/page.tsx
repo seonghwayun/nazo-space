@@ -42,12 +42,21 @@ function SearchContent() {
   const [isLoading, setIsLoading] = React.useState(false);
   const debouncedQuery = useDebounce(query, 500);
 
-  // Feed State
+  // Search Pagination State
+  const [searchPages, setSearchPages] = React.useState({ nazo: 1, creator: 1, tag: 1 });
+  const [searchHasMore, setSearchHasMore] = React.useState({ nazo: true, creator: true, tag: true });
+  const [isMoreLoading, setIsMoreLoading] = React.useState(false);
+
+  // Feed State (for empty query)
   const [feedNazos, setFeedNazos] = React.useState<INazo[]>([]);
-  const [page, setPage] = React.useState(1);
-  const [hasMore, setHasMore] = React.useState(true);
+  const [feedPage, setFeedPage] = React.useState(1);
+  const [feedHasMore, setFeedHasMore] = React.useState(true);
   const [isFeedLoading, setIsFeedLoading] = React.useState(false);
   const observerTarget = React.useRef(null);
+
+  // Feed Fetch Logic
+  // Track the last page we successfully requested to prevent duplicate fetches on tab switch
+  const lastFetchedPages = React.useRef({ nazo: 1, creator: 1, tag: 1 });
 
   const fetchFeed = React.useCallback(async (pageNum: number) => {
     setIsFeedLoading(true);
@@ -64,7 +73,7 @@ function SearchContent() {
             return [...prev, ...newNazos];
           });
         }
-        setHasMore(data.pagination.hasMore);
+        setFeedHasMore(data.pagination.hasMore);
       }
     } catch (error) {
       console.error("Failed to fetch feed:", error);
@@ -73,24 +82,53 @@ function SearchContent() {
     }
   }, []);
 
-  // Initial fetch and reset when query cleared
-  React.useEffect(() => {
-    if (!debouncedQuery && activeTab === "nazo") {
-      // Only fetch if we haven't already (or if we want to refresh on clear).
-      // Let's simple check if empty.
-      if (feedNazos.length === 0) {
-        fetchFeed(1);
-      }
-    }
-  }, [debouncedQuery, activeTab, fetchFeed, feedNazos.length]);
+  // Search More Fetch Logic
+  const fetchMoreSearch = React.useCallback(async (type: "nazo" | "creator" | "tag", pageNum: number) => {
+    setIsMoreLoading(true);
+    try {
+      const res = await fetch(`/api/nazo/search?q=${encodeURIComponent(debouncedQuery)}&type=${type}&page=${pageNum}&limit=20`);
+      const data = await res.json();
 
-  // Add a way to reset feed if needed, or just let it persist?
-  // UseEffect for infinite scroll triggering page increment
+      setResults((prev) => ({
+        ...prev,
+        nazos: type === 'nazo' ? [...prev.nazos, ...data.nazos] : prev.nazos,
+        creators: type === 'creator' ? [...prev.creators, ...data.creators] : prev.creators,
+        tags: type === 'tag' ? [...prev.tags, ...data.tags] : prev.tags,
+      }));
+
+      // Update hasMore
+      // Note: API returns arrays in plural keys: nazos, creators, tags
+      const resultKey = type === 'nazo' ? 'nazos' : type === 'creator' ? 'creators' : 'tags';
+      const count = data[resultKey]?.length || 0;
+
+      setSearchHasMore((prev) => ({
+        ...prev,
+        [type]: count >= 20
+      }));
+
+    } catch (error) {
+      console.error("Failed to load more search results:", error);
+    } finally {
+      setIsMoreLoading(false);
+    }
+  }, [debouncedQuery, setResults]);
+
+
+  // Observer for Infinite Scroll (Handles both Feed and Search)
   React.useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && !isFeedLoading && !debouncedQuery && activeTab === "nazo") {
-          setPage((prev) => prev + 1);
+        if (entries[0].isIntersecting) {
+          // Case 1: Search Results
+          if (debouncedQuery) {
+            if (searchHasMore[activeTab] && !isMoreLoading && !isLoading) {
+              setSearchPages((prev) => ({ ...prev, [activeTab]: prev[activeTab] + 1 }));
+            }
+          }
+          // Case 2: Feed (No Query)
+          else if (activeTab === "nazo" && feedHasMore && !isFeedLoading) {
+            setFeedPage((prev) => prev + 1);
+          }
         }
       },
       { threshold: 0.1 }
@@ -101,20 +139,39 @@ function SearchContent() {
     }
 
     return () => observer.disconnect();
-  }, [hasMore, isFeedLoading, debouncedQuery, activeTab]);
+  }, [debouncedQuery, activeTab, searchHasMore, isMoreLoading, isLoading, feedHasMore, isFeedLoading]);
 
-  // Fetch when page changes
+  // Effect: Trigger Feed Fetch on Page Change
   React.useEffect(() => {
-    if (page > 1 && !debouncedQuery && activeTab === "nazo") {
-      fetchFeed(page);
+    if (!debouncedQuery && activeTab === "nazo" && feedPage > 1) {
+      fetchFeed(feedPage);
     }
-  }, [page, debouncedQuery, activeTab, fetchFeed]);
+  }, [feedPage, debouncedQuery, activeTab, fetchFeed]);
 
+  // Effect: Trigger Search More Fetch on Page Change
   React.useEffect(() => {
-    async function fetchResults() {
-      if (debouncedQuery === lastSearchedQuery && debouncedQuery) {
-        return;
-      }
+    const p = searchPages[activeTab];
+    // Only fetch if page incremented beyond what we last fetched
+    if (debouncedQuery && p > 1 && p > lastFetchedPages.current[activeTab]) {
+      lastFetchedPages.current[activeTab] = p;
+      fetchMoreSearch(activeTab, p);
+    }
+  }, [searchPages, activeTab, debouncedQuery, fetchMoreSearch]);
+
+  // Effect: Initial Feed Load
+  React.useEffect(() => {
+    if (!debouncedQuery && activeTab === "nazo" && feedNazos.length === 0) {
+      fetchFeed(1);
+    }
+  }, [debouncedQuery, activeTab, fetchFeed, feedNazos.length]);
+
+
+  // Effect: Initial Search Load (Reset)
+  React.useEffect(() => {
+    async function fetchInitialResults() {
+      // Logic from useDebounce means debouncedQuery updates slightly later
+      // We check if it matches last searched or if empty
+      if (debouncedQuery === lastSearchedQuery && debouncedQuery) return;
 
       if (!debouncedQuery) {
         setResults({ nazos: [], creators: [], tags: [] });
@@ -123,10 +180,23 @@ function SearchContent() {
       }
 
       setIsLoading(true);
+      // Reset Pages and HasMore
+      setSearchPages({ nazo: 1, creator: 1, tag: 1 });
+      lastFetchedPages.current = { nazo: 1, creator: 1, tag: 1 };
+      setSearchHasMore({ nazo: true, creator: true, tag: true });
+
       try {
         const response = await fetch(`/api/nazo/search?q=${encodeURIComponent(debouncedQuery)}`);
         const data = await response.json();
         setResults(data);
+
+        // Initialize HasMore based on first batch
+        setSearchHasMore({
+          nazo: data.nazos.length >= 20,
+          creator: data.creators.length >= 20,
+          tag: data.tags.length >= 20
+        });
+
       } catch (error) {
         console.error("Failed to search:", error);
       } finally {
@@ -135,8 +205,8 @@ function SearchContent() {
       }
     }
 
-    fetchResults();
-  }, [debouncedQuery]);
+    fetchInitialResults();
+  }, [debouncedQuery]); // Intentionally minimal deps
 
   const isSearching = query.length > 0 && (
     query !== debouncedQuery ||
@@ -244,6 +314,16 @@ function SearchContent() {
                   </div>
                 </Link>
               ))}
+
+              {/* Load More Indicator */}
+              {isMoreLoading && (
+                <div className="py-4 flex justify-center">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              )}
+
+              {/* Infinite Scroll Anchor */}
+              <div ref={observerTarget} className="h-4 w-full" />
             </div>
           ) : query ? (
             <div className="flex flex-col items-center justify-center h-40 text-center">

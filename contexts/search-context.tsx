@@ -15,7 +15,7 @@ interface SearchContextType {
   query: string;
   setQuery: (query: string) => void;
   results: SearchResults;
-  setResults: (results: SearchResults) => void;
+  setResults: React.Dispatch<React.SetStateAction<SearchResults>>;
   lastSearchedQuery: string;
   setLastSearchedQuery: (query: string) => void;
 }
