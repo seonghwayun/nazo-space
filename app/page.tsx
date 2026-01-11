@@ -220,6 +220,25 @@ export default function Home() {
 
   return (
     <MainLayout>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "Nazo Space",
+            "url": "https://nazo.respace.cc",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": {
+                "@type": "EntryPoint",
+                "urlTemplate": "https://nazo.respace.cc/search?q={search_term_string}"
+              },
+              "query-input": "required name=search_term_string"
+            }
+          })
+        }}
+      />
       <div
         ref={scrollContainerRef}
         className="h-full overflow-y-auto relative overscroll-y-contain"

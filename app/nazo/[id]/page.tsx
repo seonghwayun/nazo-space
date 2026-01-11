@@ -66,5 +66,30 @@ export default async function Page({ params }: PageProps) {
     updatedAt: nazo.updatedAt?.toISOString(),
   };
 
-  return <NazoDetailPage initialNazo={serializedNazo as any} />;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Game",
+    "name": nazo.originalTitle,
+    "image": nazo.imageUrl ? [nazo.imageUrl] : [],
+    "description": nazo.description,
+    "aggregateRating": (nazo.rateCount || 0) > 0 ? {
+      "@type": "AggregateRating",
+      "ratingValue": nazo.averageRate,
+      "reviewCount": nazo.rateCount
+    } : undefined,
+    "author": nazo.creators?.map((c: any) => ({
+      "@type": "Person",
+      "name": c.name
+    }))
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <NazoDetailPage initialNazo={serializedNazo as any} />
+    </>
+  );
 }
