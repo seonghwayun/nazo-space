@@ -18,6 +18,13 @@ interface SearchContextType {
   setResults: React.Dispatch<React.SetStateAction<SearchResults>>;
   lastSearchedQuery: string;
   setLastSearchedQuery: (query: string) => void;
+  // Feed State
+  feedNazos: INazo[];
+  setFeedNazos: React.Dispatch<React.SetStateAction<INazo[]>>;
+  feedPage: number;
+  setFeedPage: React.Dispatch<React.SetStateAction<number>>;
+  feedHasMore: boolean;
+  setFeedHasMore: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const SearchContext = createContext<SearchContextType | undefined>(undefined);
@@ -26,6 +33,11 @@ export function SearchProvider({ children }: { children: ReactNode }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResults>({ nazos: [], creators: [], tags: [] });
   const [lastSearchedQuery, setLastSearchedQuery] = useState("");
+
+  // Feed State
+  const [feedNazos, setFeedNazos] = useState<INazo[]>([]);
+  const [feedPage, setFeedPage] = useState(1);
+  const [feedHasMore, setFeedHasMore] = useState(true);
 
   return (
     <SearchContext.Provider
@@ -36,6 +48,12 @@ export function SearchProvider({ children }: { children: ReactNode }) {
         setResults,
         lastSearchedQuery,
         setLastSearchedQuery,
+        feedNazos,
+        setFeedNazos,
+        feedPage,
+        setFeedPage,
+        feedHasMore,
+        setFeedHasMore,
       }}
     >
       {children}

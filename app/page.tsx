@@ -20,6 +20,13 @@ export default function Home() {
   const [data, setData] = useState<HomeData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Scroll restoration key
+  const SCROLL_KEY = "nazo-space-home-scroll";
+
+  // Scroll restoration state
+  const hasRestoredScrollRef = useRef(false);
+  const saveScrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   // Pull to refresh state
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pullY, setPullY] = useState(0);
@@ -47,6 +54,45 @@ export default function Home() {
       if (showLoading) setIsLoading(false);
       setIsRefreshing(false);
     }
+  }, []);
+
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    const scrollTop = e.currentTarget.scrollTop;
+
+    if (saveScrollTimeoutRef.current) {
+      clearTimeout(saveScrollTimeoutRef.current);
+    }
+
+    saveScrollTimeoutRef.current = setTimeout(() => {
+      sessionStorage.setItem(SCROLL_KEY, scrollTop.toString());
+    }, 100);
+  }, []);
+
+  useEffect(() => {
+    // Only restore if data is loaded and we haven't done it yet this session (mount)
+    if (!isLoading && data && !hasRestoredScrollRef.current) {
+      const savedPos = sessionStorage.getItem(SCROLL_KEY);
+      if (savedPos && scrollContainerRef.current) {
+        try {
+          const scrollTop = parseInt(savedPos, 10);
+          if (!isNaN(scrollTop)) {
+            scrollContainerRef.current.scrollTo({ top: scrollTop, behavior: 'instant' });
+          }
+        } catch (error) {
+          console.error("Failed to restore scroll position", error);
+        }
+      }
+      hasRestoredScrollRef.current = true;
+    }
+  }, [isLoading, data]);
+
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (saveScrollTimeoutRef.current) {
+        clearTimeout(saveScrollTimeoutRef.current);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -242,6 +288,7 @@ export default function Home() {
       <div
         ref={scrollContainerRef}
         className="h-full overflow-y-auto relative overscroll-y-contain"
+        onScroll={handleScroll}
         onTouchEnd={handleTouchEnd}
       >
         {/* Pull Indicator */}

@@ -25,6 +25,12 @@ function SearchContent() {
     setResults,
     lastSearchedQuery,
     setLastSearchedQuery,
+    feedNazos,
+    setFeedNazos,
+    feedPage,
+    setFeedPage,
+    feedHasMore,
+    setFeedHasMore,
   } = useSearchContext();
 
   const searchParams = useSearchParams();
@@ -47,16 +53,52 @@ function SearchContent() {
   const [searchHasMore, setSearchHasMore] = React.useState({ nazo: true, creator: true, tag: true });
   const [isMoreLoading, setIsMoreLoading] = React.useState(false);
 
-  // Feed State (for empty query)
-  const [feedNazos, setFeedNazos] = React.useState<INazo[]>([]);
-  const [feedPage, setFeedPage] = React.useState(1);
-  const [feedHasMore, setFeedHasMore] = React.useState(true);
+  // Feed State (for empty query) - Now from Context
   const [isFeedLoading, setIsFeedLoading] = React.useState(false);
   const observerTarget = React.useRef(null);
 
   // Feed Fetch Logic
   // Track the last page we successfully requested to prevent duplicate fetches on tab switch
   const lastFetchedPages = React.useRef({ nazo: 1, creator: 1, tag: 1 });
+
+  // Scroll Restoration
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+  const restoreScrollRef = React.useRef(false);
+  const saveScrollTimeoutRef = React.useRef<NodeJS.Timeout>(null);
+  const SEARCH_SCROLL_KEY = "nazo-search-scroll-pos";
+
+  const handleScroll = React.useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    const scrollTop = e.currentTarget.scrollTop;
+    if (saveScrollTimeoutRef.current) clearTimeout(saveScrollTimeoutRef.current);
+    saveScrollTimeoutRef.current = setTimeout(() => {
+      sessionStorage.setItem(SEARCH_SCROLL_KEY, scrollTop.toString());
+    }, 100);
+  }, []);
+
+  // Restore scroll
+  React.useEffect(() => {
+    // We try to restore when not loading and we have some content (or at least initial load done)
+    const hasContent = (activeTab === "nazo" && feedNazos.length > 0) ||
+      (results.nazos.length > 0) ||
+      (results.creators.length > 0) ||
+      (results.tags.length > 0);
+
+    if (!isLoading && !restoreScrollRef.current) {
+      // Warning: for Feed, we only have page 1 initially on refresh/back unless context changes.
+      // But for Search Results, we have them from context.
+      // We attempt restoration anyway.
+      const savedPos = sessionStorage.getItem(SEARCH_SCROLL_KEY);
+      if (savedPos && scrollContainerRef.current) {
+        try {
+          const scrollTop = parseInt(savedPos, 10);
+          if (!isNaN(scrollTop)) {
+            scrollContainerRef.current.scrollTo({ top: scrollTop, behavior: 'instant' });
+          }
+        } catch (e) { }
+      }
+      restoreScrollRef.current = true;
+    }
+  }, [isLoading, results, feedNazos, activeTab]);
 
   const fetchFeed = React.useCallback(async (pageNum: number) => {
     setIsFeedLoading(true);
@@ -273,7 +315,11 @@ function SearchContent() {
       </div>
 
       {/* Scrollable Content Area (Full Width) */}
-      <div className="flex-1 overflow-y-auto w-full min-h-0">
+      <div
+        ref={scrollContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto w-full min-h-0"
+      >
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 md:px-8 py-6">
           {isSearching ? (
             <div className="grid grid-cols-1 gap-4">
