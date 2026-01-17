@@ -15,6 +15,7 @@ interface CreatorFormModalProps {
   onClose: () => void;
   onSubmit: (data: CreatorFormData) => Promise<void>;
   title?: string;
+  initialData?: CreatorFormData;
 }
 
 export function CreatorFormModal({
@@ -22,10 +23,11 @@ export function CreatorFormModal({
   onClose,
   onSubmit,
   title = "Create New Creator",
+  initialData,
 }: CreatorFormModalProps) {
   const [formData, setFormData] = useState<CreatorFormData>({
-    name: "",
-    url: "",
+    name: initialData?.name || "",
+    url: initialData?.url || "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 

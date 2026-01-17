@@ -14,6 +14,7 @@ interface HomeData {
   recent: INazo[];
   topRated: INazo[];
   recentlyReviewed: INazo[];
+  totalCount: number;
 }
 
 export default function Home() {
@@ -316,6 +317,15 @@ export default function Home() {
           {/* Sections */}
           {data && (
             <>
+              {/* Total Count Banner */}
+              <div className="flex flex-col items-center justify-center py-6 mb-2">
+                <span className="text-muted-foreground text-sm font-medium mb-1">지금까지 등록된 나조</span>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl font-black text-primary tracking-tighter">{data.totalCount}</span>
+                  <span className="text-lg font-bold text-muted-foreground">개</span>
+                </div>
+              </div>
+
               {/* Recently Added */}
               <section>
                 <SectionHeader icon={Plus} title="최근 추가된 나조" link="/search" />

@@ -1,4 +1,5 @@
 import { MainLayout } from "@/components/layout/main-layout";
+import { CreatorEditButton } from "@/components/creator/creator-edit-button";
 import { BackButton } from "@/components/ui/back-button";
 import connectToDatabase from "@/lib/db";
 import Creator from "@/models/creator";
@@ -77,7 +78,14 @@ export default async function CreatorPage({ params }: CreatorPageProps) {
               👤
             </div>
             <div className="flex flex-col">
-              <h1 className="text-2xl font-bold">{creator.name}</h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-bold">{creator.name}</h1>
+                <CreatorEditButton creator={{
+                  _id: creator._id.toString(),
+                  name: creator.name,
+                  url: creator.url
+                }} />
+              </div>
               <p className="text-sm text-muted-foreground">
                 총 {createdNazos.length}개의 나조를 제작했습니다.
               </p>

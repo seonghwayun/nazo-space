@@ -7,7 +7,7 @@ export async function GET() {
   try {
     await connectToDatabase();
 
-    const [recent, topRated, recentlyReviewed] = await Promise.all([
+    const [recent, topRated, recentlyReviewed, totalCount] = await Promise.all([
       // 1. Recently Added
       Nazo.find({})
         .sort({ createdAt: -1 })
@@ -33,7 +33,10 @@ export async function GET() {
         return uniqueNazoIds.map(id =>
           reviewedNazosUnordered.find((n: any) => n._id.toString() === id)
         ).filter(n => n !== undefined);
-      })()
+      })(),
+
+      // 4. Total Count
+      Nazo.countDocuments({})
     ]);
 
     return NextResponse.json(
@@ -41,6 +44,7 @@ export async function GET() {
         recent,
         topRated,
         recentlyReviewed,
+        totalCount,
       },
       {
         headers: {
