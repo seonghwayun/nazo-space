@@ -60,7 +60,7 @@ export function ShareModal({ isOpen, onClose, url, nazo }: ShareModalProps) {
   };
 
   const handleInstagramShare = async () => {
-    if (!nazo || !cardRef.current) return;
+    if (!nazo) return; // Removed cardRef.current check here because it's initially null
     setIsGenerating(true);
     imageLoadedRef.current = false;
     setReadyImageUrl(null); // Force reset to ensure onLoad fires again on change
@@ -99,7 +99,16 @@ export function ShareModal({ isOpen, onClose, url, nazo }: ShareModalProps) {
         setReadyImageUrl(imgUrl); // Fallback
       }
 
-      // 2. Wait for the image to actually load in the DOM
+      // 2. Wait for Card Mount AND Image Load
+      // First, wait for cardRef to exist (it mounts after setReadyImageUrl)
+      let mountAttempts = 0;
+      while (!cardRef.current && mountAttempts < 20) {
+        await new Promise(r => setTimeout(r, 50));
+        mountAttempts++;
+      }
+      if (!cardRef.current) throw new Error("Share card failed to mount");
+
+      // Then wait for the image to actually load in the DOM
       // We rely on the child component calling the onLoad callback which updates our ref
       let attempts = 0;
       // Wait until ref becomes true. We need a small delay inside loop to yield execution.
