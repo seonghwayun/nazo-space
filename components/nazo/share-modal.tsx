@@ -62,7 +62,9 @@ export function ShareModal({ isOpen, onClose, url, nazo }: ShareModalProps) {
   const handleInstagramShare = async () => {
     if (!nazo || !cardRef.current) return;
     setIsGenerating(true);
-    imageLoadedRef.current = false; // Reset before starting
+    imageLoadedRef.current = false;
+    setReadyImageUrl(null); // Force reset to ensure onLoad fires again on change
+    await new Promise(r => setTimeout(r, 50)); // Small tick to allow render cycle
 
     try {
       // 1. Pre-fetch image via Proxy
@@ -191,25 +193,47 @@ export function ShareModal({ isOpen, onClose, url, nazo }: ShareModalProps) {
 
           <div className="flex flex-col gap-4 pt-2">
             {/* Native App Share Button - Only visible on Mobile */}
+            {/* Mobile Share Buttons */}
             {nazo && isMobile && (
-              <Button
-                variant="outline"
-                className="w-full gap-2 relative overflow-hidden group h-12"
-                onClick={handleInstagramShare}
-                disabled={isGenerating}
-              >
-                {isGenerating ? (
-                  <>
-                    <div className="h-4 w-4 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin" />
-                    <span className="text-muted-foreground">생성 중...</span>
-                  </>
-                ) : (
-                  <>
-                    <Share2 className="h-4 w-4" />
-                    <span>인스타그램 / X / 카카오톡 공유</span>
-                  </>
-                )}
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1 gap-2 relative overflow-hidden group h-12"
+                  onClick={handleInstagramShare} // Sends Image
+                  disabled={isGenerating}
+                >
+                  {isGenerating ? (
+                    <>
+                      <div className="h-4 w-4 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin" />
+                      <span className="text-muted-foreground w-max leading-none">..</span>
+                    </>
+                  ) : (
+                    <>
+                      <Instagram className="h-4 w-4" />
+                      <span className="text-xs">인스타그램 (이미지)</span>
+                    </>
+                  )}
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="flex-1 gap-2 h-12"
+                  onClick={async () => {
+                    try {
+                      await navigator.share({
+                        title: nazo.originalTitle,
+                        text: `${nazo.originalTitle} - Nazo Space`,
+                        url: window.location.href, // Sends Link Only for Cards
+                      });
+                    } catch (err: any) {
+                      if (err.name !== 'AbortError') alert("공유 실패");
+                    }
+                  }}
+                >
+                  <Share2 className="h-4 w-4" />
+                  <span className="text-xs">X / 카카오 (링크)</span>
+                </Button>
+              </div>
             )}
 
             {/* Standard Link Copy */}
