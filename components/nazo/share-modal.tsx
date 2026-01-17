@@ -128,23 +128,40 @@ export function ShareModal({ isOpen, onClose, url, nazo }: ShareModalProps) {
       // Extra buffer for rendering (gradients, fonts)
       await new Promise(resolve => setTimeout(resolve, 800));
 
-      // 3. Generate Blob
-      // Mobile often fails on font embedding or huge images. 
-      // We disable font embedding to be safe.
-      const blob = await toBlob(cardRef.current, {
-        cacheBust: false, // Don't append timestamps, breaks signed URLs
-        skipAutoScale: true,
-        pixelRatio: 1,
-        fontEmbedCSS: '', // DISABLE FONT FETCHING
-        filter: (node) => {
-          // Exclude any cross-origin link tags if they sneak in
-          if (node.tagName === 'LINK') return false;
-          return true;
+      // 3. Generate Blob with Retry Logic (Self-Healing)
+      let blob: Blob | null = null;
+      let captureAttempts = 0;
+
+      while (!blob && captureAttempts < 3) {
+        try {
+          // Mobile often fails on font embedding or huge images. 
+          const generatedBlob = await toBlob(cardRef.current, {
+            cacheBust: false,
+            skipAutoScale: true,
+            pixelRatio: 1,
+            fontEmbedCSS: '',
+            filter: (node) => {
+              if (node.tagName === 'LINK') return false;
+              return true;
+            }
+          });
+
+          // Validate Blob Size (A full HD card should be > 50KB. Blank is usually < 10KB)
+          if (generatedBlob && generatedBlob.size > 50000) {
+            blob = generatedBlob;
+          } else {
+            console.warn(`Generated blob too small (${generatedBlob?.size} bytes). Retrying...`);
+            await new Promise(r => setTimeout(r, 500)); // Wait before retry
+          }
+        } catch (err) {
+          console.warn("Capture attempt failed", err);
+          await new Promise(r => setTimeout(r, 500));
         }
-      });
+        captureAttempts++;
+      }
 
       if (!blob) {
-        throw new Error("Blob generation returned null");
+        throw new Error("Failed to generate valid image after retries.");
       }
 
       const file = new File([blob], "nazo-share.png", { type: "image/png" });
@@ -290,7 +307,7 @@ export function ShareModal({ isOpen, onClose, url, nazo }: ShareModalProps) {
       {/* Fix: Only mount the card when readyImageUrl is set. 
           This forces a fresh mount with the correct base64 image, ensuring onLoad fires reliably. */}
       {nazo && readyImageUrl && (
-        <div className="fixed top-0 left-0 w-[1080px] h-[1920px] pointer-events-none opacity-0 overflow-hidden z-[-1]">
+        <div className="fixed top-0 left-[-9999px] w-[1080px] h-[1920px] overflow-hidden z-[-1] visible">
           <InstagramShareCard
             key={readyImageUrl} // CRITICAL: Force full re-mount when image changes
             ref={cardRef}
