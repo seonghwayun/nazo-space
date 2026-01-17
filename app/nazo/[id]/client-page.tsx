@@ -268,16 +268,30 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
       <div className="flex flex-col">
         {/* Hero Section */}
         <div
-          className="relative w-full h-[45vh] md:h-[55vh] shrink-0 cursor-pointer group"
+          className="relative w-full h-[45vh] md:h-[55vh] shrink-0 cursor-pointer group bg-black overflow-hidden"
           onClick={() => setIsImageModalOpen(true)}
         >
-          <Image
-            src={nazo.imageUrl || `/api/image/${nazo._id}`}
-            alt={nazo.originalTitle}
-            fill
-            className="object-cover"
-            priority
-          />
+          {/* Blurred Background Layer - Fills the container, highly blurred */}
+          <div className="absolute inset-0 z-0">
+            <Image
+              src={nazo.imageUrl || `/api/image/${nazo._id}`}
+              alt={nazo.originalTitle}
+              fill
+              className="object-cover blur-3xl opacity-50 scale-110"
+              priority
+            />
+          </div>
+
+          {/* Main Image Layer - Contained */}
+          <div className="absolute inset-0 z-0 flex items-center justify-center">
+            <Image
+              src={nazo.imageUrl || `/api/image/${nazo._id}`}
+              alt={nazo.originalTitle}
+              fill
+              className="object-contain"
+              priority
+            />
+          </div>
           <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
 
           <div className="fixed top-4 left-4 z-50">
@@ -573,6 +587,6 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
         imageUrl={nazo.imageUrl || `/api/image/${nazo._id}`}
         alt={nazo.originalTitle}
       />
-    </div>
+    </div >
   );
 }
