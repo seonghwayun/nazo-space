@@ -38,6 +38,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: `${nazo.originalTitle} | Nazo Space`,
       description: nazo.description ? nazo.description.slice(0, 150) + "..." : "나조 상세 정보",
       images: nazo.imageUrl ? [nazo.imageUrl] : [],
+      siteName: 'Nazo Space',
+      locale: 'ko_KR',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${nazo.originalTitle} | Nazo Space`,
+      description: nazo.description ? nazo.description.slice(0, 150) + "..." : "나조 상세 정보",
+      images: nazo.imageUrl ? [nazo.imageUrl] : [],
     },
   };
 }

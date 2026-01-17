@@ -51,56 +51,93 @@ export const InstagramShareCard = forwardRef(({ nazo, readyImageUrl, dominantCol
       `}</style>
       <div
         id="instagram-share-card-inner"
-        className="w-[800px] rounded-3xl overflow-hidden relative"
+        className="w-[850px] rounded-[40px] overflow-hidden relative flex flex-col"
         style={{
           backgroundColor: '#1a1a1a',
         }}
       >
-        {/* Artwork */}
-        <div className="w-full aspect-square relative">
-          <img
-            src={readyImageUrl || nazo.imageUrl || `/api/image/${nazo._id}`}
-            alt={nazo.originalTitle}
-            className="w-full h-full object-cover"
-            // If using readyImageUrl (base64), crossOrigin isn't needed but harmless
-            // If using remove url, it is needed.
-            crossOrigin="anonymous"
-            onLoad={onImageLoad} // Notify parent when loaded
+        {/* Artwork Area - Fixed height 4:5 ratio-ish to fit nicely */}
+        <div className="w-full h-[1000px] relative overflow-hidden bg-black">
+          {/* Layer 1: Blurred Background */}
+          <div
+            className="absolute inset-0 scale-110"
+            style={{
+              backgroundImage: `url(${readyImageUrl || nazo.imageUrl || `/api/image/${nazo._id}`})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              filter: 'blur(40px) brightness(0.7)',
+            }}
           />
+
+          {/* Layer 2: Main Image - Contained */}
+          <div className="absolute inset-0 flex items-center justify-center p-10">
+            <img
+              src={readyImageUrl || nazo.imageUrl || `/api/image/${nazo._id}`}
+              alt={nazo.originalTitle}
+              className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
+              style={{
+                boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
+              }}
+              crossOrigin="anonymous"
+              onLoad={onImageLoad}
+            />
+          </div>
         </div>
 
-        {/* Info Area */}
+        {/* Info Area - Centered & Enriched */}
         <div
-          className="p-10 pb-12"
-          style={{ backgroundColor: '#1E0505' }}
+          className="p-12 pt-10 flex flex-col items-center text-center relative z-10"
+          style={{
+            backgroundColor: baseColor, // Use dominant color base
+            background: `linear-gradient(to bottom, ${baseColor} 0%, #1a1a1a 100%)`
+          }}
         >
+          {/* Title */}
           <h1
-            className="text-6xl font-black mb-4 line-clamp-2 leading-tight tracking-tight"
-            style={{ color: '#ffffff' }}
+            className="text-[3.5rem] font-black mb-4 leading-tight tracking-tight text-white drop-shadow-lg"
+            style={{
+              textShadow: '0 2px 10px rgba(0,0,0,0.3)'
+            }}
           >
             {nazo.originalTitle}
           </h1>
 
-          <div className="flex items-center justify-between">
-            <p
-              className="text-3xl font-medium"
-              style={{ color: 'rgba(255, 255, 255, 0.7)' }}
-            >
-              {nazo.creators && nazo.creators.length > 0
-                ? nazo.creators.map((c: any) => c.name).join(", ")
-                : "Unknown Creator"}
-            </p>
+          {/* Creator */}
+          <p
+            className="text-2xl font-semibold mb-8 text-white/80"
+          >
+            {nazo.creators && nazo.creators.length > 0
+              ? nazo.creators.map((c: any) => c.name).join(", ")
+              : "Unknown Creator"}
+          </p>
+
+          {/* Stats / Metadata Row */}
+          <div className="flex items-center gap-8 mb-10">
+            {nazo.difficulty && (
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-white/50 text-sm uppercase tracking-wider font-bold">Difficulty</span>
+                <span className="text-white text-xl font-bold">{nazo.difficulty}</span>
+              </div>
+            )}
+
+            {nazo.estimatedTime && (
+              <>
+                <div className="w-px h-8 bg-white/20"></div>
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-white/50 text-sm uppercase tracking-wider font-bold">Time</span>
+                  <span className="text-white text-xl font-bold">{nazo.estimatedTime}</span>
+                </div>
+              </>
+            )}
           </div>
 
-          {/* Branding / Logo Area */}
-          <div className="mt-12 flex items-center gap-4">
+          {/* Footer Branding */}
+          <div className="mt-auto pt-6 border-t border-white/10 w-full flex justify-center">
             <span
-              className="font-bold text-2xl flex items-center gap-3"
-              style={{ color: '#ffffff' }}
+              className="font-bold text-xl flex items-center gap-3 text-white/90"
             >
-              {/* Circle Icon */}
               <div
-                className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg"
+                className="w-8 h-8 rounded-full flex items-center justify-center font-black text-sm"
                 style={{
                   backgroundColor: '#ffffff',
                   color: '#000000'

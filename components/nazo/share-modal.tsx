@@ -22,6 +22,18 @@ export function ShareModal({ isOpen, onClose, url, nazo }: ShareModalProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [dominantColor, setDominantColor] = useState<string>('#2A0F0F');
   const imageLoadedRef = useRef(false); // Use ref for live tracking in async loop
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Check for mobile environment
+  useEffect(() => {
+    const checkMobile = () => {
+      const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+      if (/android/i.test(userAgent)) return true;
+      if (/iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream) return true;
+      return false;
+    };
+    setIsMobile(checkMobile());
+  }, []);
 
   // Clean up body scroll lock if needed, though radix dialog handles this usually.
   // Since this is a custom modal, we rely on parent or it handles itself.
@@ -178,8 +190,8 @@ export function ShareModal({ isOpen, onClose, url, nazo }: ShareModalProps) {
           </div>
 
           <div className="flex flex-col gap-4 pt-2">
-            {/* Instagram Share Button */}
-            {nazo && (
+            {/* Native App Share Button - Only visible on Mobile */}
+            {nazo && isMobile && (
               <Button
                 variant="outline"
                 className="w-full gap-2 relative overflow-hidden group h-12"
@@ -193,8 +205,8 @@ export function ShareModal({ isOpen, onClose, url, nazo }: ShareModalProps) {
                   </>
                 ) : (
                   <>
-                    <Instagram className="h-4 w-4" />
-                    <span>인스타그램 스토리로 공유</span>
+                    <Share2 className="h-4 w-4" />
+                    <span>인스타그램 / X / 카카오톡 공유</span>
                   </>
                 )}
               </Button>
