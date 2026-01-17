@@ -267,7 +267,10 @@ export function ShareModal({ isOpen, onClose, url, nazo }: ShareModalProps) {
       </div>
 
       {/* Hidden Render Area for Canvas Generation */}
-      {nazo && (
+      {/* Hidden Render Area for Canvas Generation */}
+      {/* Fix: Only mount the card when readyImageUrl is set. 
+          This forces a fresh mount with the correct base64 image, ensuring onLoad fires reliably. */}
+      {nazo && readyImageUrl && (
         <div className="fixed top-0 left-0 w-[1080px] h-[1920px] pointer-events-none opacity-0 overflow-hidden z-[-1]">
           <InstagramShareCard
             ref={cardRef}
