@@ -579,6 +579,7 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
         url={typeof window !== "undefined" ? window.location.href : ""}
+        nazo={nazo}
       />
 
       <ImageModal
