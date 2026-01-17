@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { INazo } from "@/models/nazo";
 import { InstagramShareCard } from "./instagram-share-card";
 import { toBlob } from "html-to-image";
+import { FastAverageColor } from 'fast-average-color';
 
 interface ShareModalProps {
   isOpen: boolean;
@@ -19,9 +20,20 @@ export function ShareModal({ isOpen, onClose, url, nazo }: ShareModalProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [readyImageUrl, setReadyImageUrl] = useState<string | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
+  const [dominantColor, setDominantColor] = useState<string>('#2A0F0F');
+  const imageLoadedRef = useRef(false); // Use ref for live tracking in async loop
 
   // Clean up body scroll lock if needed, though radix dialog handles this usually.
   // Since this is a custom modal, we rely on parent or it handles itself.
+
+  // Reset state when closing/opening
+  useEffect(() => {
+    if (!isOpen) {
+      setIsGenerating(false);
+      setReadyImageUrl(null);
+      imageLoadedRef.current = false;
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -38,33 +50,52 @@ export function ShareModal({ isOpen, onClose, url, nazo }: ShareModalProps) {
   const handleInstagramShare = async () => {
     if (!nazo || !cardRef.current) return;
     setIsGenerating(true);
+    imageLoadedRef.current = false; // Reset before starting
 
     try {
-      // 1. Pre-fetch image to avoid CORS issues in canvas
-      // This is crucial for mobile Safari which is strict about cross-origin images in foreignObject
+      // 1. Pre-fetch image via Proxy
       const imgUrl = nazo.imageUrl || `/api/image/${nazo._id}`;
+      let base64Image = '';
 
       try {
-        // Use our own proxy to fetch the image same-origin
         const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(imgUrl)}`;
         const response = await fetch(proxyUrl);
         if (!response.ok) throw new Error('Proxy fetch failed');
 
         const blob = await response.blob();
-        const base64 = await new Promise<string>((resolve) => {
+
+        // Extract Color from Blob
+        try {
+          const fac = new FastAverageColor();
+          const bitmap = await createImageBitmap(blob);
+          const color = fac.getColor(bitmap);
+          setDominantColor(color.hex);
+        } catch (colorErr) {
+          console.warn("Color extraction failed, using default", colorErr);
+        }
+
+        base64Image = await new Promise<string>((resolve) => {
           const reader = new FileReader();
           reader.onloadend = () => resolve(reader.result as string);
           reader.readAsDataURL(blob);
         });
-        setReadyImageUrl(base64);
+        setReadyImageUrl(base64Image);
       } catch (e) {
         console.error("Failed to fetch image for processing", e);
-        // Fallback to original url, might fail but worth a try (likely will fail on mobile if proxy failed)
-        setReadyImageUrl(imgUrl);
+        setReadyImageUrl(imgUrl); // Fallback
       }
 
-      // 2. Wait for the state to update and image to theoretically "render" with new source
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // 2. Wait for the image to actually load in the DOM
+      // We rely on the child component calling the onLoad callback which updates our ref
+      let attempts = 0;
+      // Wait until ref becomes true. We need a small delay inside loop to yield execution.
+      while (!imageLoadedRef.current && attempts < 50) { // 50 * 100ms = 5 seconds max
+        await new Promise(r => setTimeout(r, 100));
+        attempts++;
+      }
+
+      // Extra buffer for rendering (gradients, fonts)
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       // 3. Generate Blob
       // Mobile often fails on font embedding or huge images. 
@@ -102,16 +133,14 @@ export function ShareModal({ isOpen, onClose, url, nazo }: ShareModalProps) {
       }
 
     } catch (error: any) {
-      console.error("Failed to generate image:", error);
-      let errorMsg = error.message || error;
-      if (typeof error === 'object' && error !== null) {
-        try {
-          // Attempt to dump object if it's an Event or generic object
-          errorMsg = JSON.stringify(error, Object.getOwnPropertyNames(error));
-          if (errorMsg === '{}') errorMsg = String(error);
-        } catch (e) { }
+      // Check for user cancellation (AbortError is standard for Web Share API)
+      if (error.name === 'AbortError' || error.message?.toLowerCase().includes('cancel')) {
+        alert("사용자가 공유를 취소했습니다.");
+        return;
       }
-      alert(`이미지 생성 실패: ${errorMsg}`);
+
+      console.error("Failed to generate image:", error);
+      alert(`이미지 생성 실패: ${error.message || error}`);
     } finally {
       setIsGenerating(false);
       // setReadyImageUrl(null); // Keep it just in case user tries again
@@ -149,6 +178,28 @@ export function ShareModal({ isOpen, onClose, url, nazo }: ShareModalProps) {
           </div>
 
           <div className="flex flex-col gap-4 pt-2">
+            {/* Instagram Share Button */}
+            {nazo && (
+              <Button
+                variant="outline"
+                className="w-full gap-2 relative overflow-hidden group h-12"
+                onClick={handleInstagramShare}
+                disabled={isGenerating}
+              >
+                {isGenerating ? (
+                  <>
+                    <div className="h-4 w-4 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin" />
+                    <span className="text-muted-foreground">생성 중...</span>
+                  </>
+                ) : (
+                  <>
+                    <Instagram className="h-4 w-4" />
+                    <span>인스타그램 스토리로 공유</span>
+                  </>
+                )}
+              </Button>
+            )}
+
             {/* Standard Link Copy */}
             <div className="flex items-center gap-2">
               <div className="grid flex-1 gap-2">
@@ -172,28 +223,6 @@ export function ShareModal({ isOpen, onClose, url, nazo }: ShareModalProps) {
               </Button>
             </div>
 
-            {/* Instagram Share Button */}
-            {nazo && (
-              <Button
-                variant="outline"
-                className="w-full gap-2 relative overflow-hidden group"
-                onClick={handleInstagramShare}
-                disabled={isGenerating}
-              >
-                {isGenerating ? (
-                  <>
-                    <div className="h-4 w-4 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin" />
-                    <span className="text-muted-foreground">생성 중...</span>
-                  </>
-                ) : (
-                  <>
-                    <Instagram className="h-4 w-4" />
-                    <span>인스타그램 스토리로 공유</span>
-                  </>
-                )}
-              </Button>
-            )}
-
             <Button variant="ghost" onClick={onClose} className="w-full">
               닫기
             </Button>
@@ -204,7 +233,15 @@ export function ShareModal({ isOpen, onClose, url, nazo }: ShareModalProps) {
       {/* Hidden Render Area for Canvas Generation */}
       {nazo && (
         <div className="fixed top-0 left-0 w-[1080px] h-[1920px] pointer-events-none opacity-0 overflow-hidden z-[-1]">
-          <InstagramShareCard ref={cardRef} nazo={nazo} readyImageUrl={readyImageUrl} />
+          <InstagramShareCard
+            ref={cardRef}
+            nazo={nazo}
+            readyImageUrl={readyImageUrl}
+            dominantColor={dominantColor}
+            onImageLoad={() => {
+              imageLoadedRef.current = true;
+            }}
+          />
         </div>
       )}
     </>

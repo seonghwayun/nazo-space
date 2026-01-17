@@ -7,9 +7,16 @@ import { ForwardedRef, forwardRef } from "react";
 interface InstagramShareCardProps {
   nazo: INazo;
   readyImageUrl?: string | null;
+  dominantColor?: string;
+  onImageLoad?: () => void;
 }
 
-export const InstagramShareCard = forwardRef(({ nazo, readyImageUrl }: InstagramShareCardProps, ref: ForwardedRef<HTMLDivElement>) => {
+export const InstagramShareCard = forwardRef(({ nazo, readyImageUrl, dominantColor, onImageLoad }: InstagramShareCardProps, ref: ForwardedRef<HTMLDivElement>) => {
+  // Default dark reddish color if no dominant color provided
+  const baseColor = dominantColor || '#2A0F0F';
+  const gradientInner = dominantColor ? dominantColor : '#4A1F1F';
+  const gradientOuter = '#000000'; // Always fade to black/dark for contrast
+
   return (
     <div
       ref={ref}
@@ -18,9 +25,9 @@ export const InstagramShareCard = forwardRef(({ nazo, readyImageUrl }: Instagram
       style={{
         width: '1080px',
         height: '1920px',
-        background: `radial-gradient(circle at center, #4A1F1F 0%, #1A0505 100%)`,
+        background: `radial-gradient(circle at center, ${gradientInner} 0%, ${gradientOuter} 100%)`,
         // fallbacks to ensure no 'bg-...' class triggers lab() in computed styles
-        backgroundColor: '#2A0F0F',
+        backgroundColor: baseColor,
         borderColor: 'transparent',
         outline: 'none',
       }}
@@ -39,15 +46,14 @@ export const InstagramShareCard = forwardRef(({ nazo, readyImageUrl }: Instagram
         }
         /* Restore specific shadow for the inner card */
         #instagram-share-card-inner {
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+            box-shadow: 0 40px 80px -12px rgba(0, 0, 0, 0.6) !important;
         }
       `}</style>
       <div
         id="instagram-share-card-inner"
         className="w-[800px] rounded-3xl overflow-hidden relative"
         style={{
-          backgroundColor: '#1E0505',
-          // boxShadow is set via ID selector above to survive the purge
+          backgroundColor: '#1a1a1a',
         }}
       >
         {/* Artwork */}
@@ -59,6 +65,7 @@ export const InstagramShareCard = forwardRef(({ nazo, readyImageUrl }: Instagram
             // If using readyImageUrl (base64), crossOrigin isn't needed but harmless
             // If using remove url, it is needed.
             crossOrigin="anonymous"
+            onLoad={onImageLoad} // Notify parent when loaded
           />
         </div>
 
