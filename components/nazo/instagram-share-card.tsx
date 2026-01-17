@@ -78,7 +78,7 @@ export const InstagramShareCard = forwardRef(({ nazo, readyImageUrl, dominantCol
               style={{
                 boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
               }}
-              crossOrigin="anonymous"
+              // crossOrigin="anonymous" // Removed for Base64 Data URLs to avoid strict CORS checks
               onLoad={(e) => {
                 // Only signal load if we have the specific readyImageUrl (base64)
                 if (readyImageUrl && onImageLoad) {

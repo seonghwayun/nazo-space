@@ -53,6 +53,7 @@ export function ShareModal({ isOpen, onClose, url, nazo }: ShareModalProps) {
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
+      alert("링크가 복사되었습니다! 인스타그램 스토리 '링크' 스티커에 붙여넣으세요.");
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error("Failed to copy text: ", err);
@@ -125,7 +126,7 @@ export function ShareModal({ isOpen, onClose, url, nazo }: ShareModalProps) {
       }
 
       // Extra buffer for rendering (gradients, fonts)
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 800));
 
       // 3. Generate Blob
       // Mobile often fails on font embedding or huge images. 
@@ -286,9 +287,12 @@ export function ShareModal({ isOpen, onClose, url, nazo }: ShareModalProps) {
       {/* Hidden Render Area for Canvas Generation */}
       {/* Fix: Only mount the card when readyImageUrl is set. 
           This forces a fresh mount with the correct base64 image, ensuring onLoad fires reliably. */}
+      {/* Fix: Only mount the card when readyImageUrl is set. 
+          This forces a fresh mount with the correct base64 image, ensuring onLoad fires reliably. */}
       {nazo && readyImageUrl && (
         <div className="fixed top-0 left-0 w-[1080px] h-[1920px] pointer-events-none opacity-0 overflow-hidden z-[-1]">
           <InstagramShareCard
+            key={readyImageUrl} // CRITICAL: Force full re-mount when image changes
             ref={cardRef}
             nazo={nazo}
             readyImageUrl={readyImageUrl}
