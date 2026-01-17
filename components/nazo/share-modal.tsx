@@ -93,6 +93,13 @@ export function ShareModal({ isOpen, onClose, url, nazo }: ShareModalProps) {
           reader.onloadend = () => resolve(reader.result as string);
           reader.readAsDataURL(blob);
         });
+
+        // CRITICAL FIX: Explicitly decode the image in browser memory BEFORE mounting the component.
+        // This ensures the browser has parsed the Base64 and is ready to paint it immediately.
+        const preLoader = new Image();
+        preLoader.src = base64Image;
+        await preLoader.decode().catch(e => console.warn("Pre-decode failed, continuing anyway", e));
+
         setReadyImageUrl(base64Image);
       } catch (e) {
         console.error("Failed to fetch image for processing", e);
