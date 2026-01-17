@@ -128,30 +128,40 @@ export function ShareModal({ isOpen, onClose, url, nazo }: ShareModalProps) {
       // Extra buffer for rendering (gradients, fonts)
       await new Promise(resolve => setTimeout(resolve, 800));
 
-      // 3. Generate Blob with Retry Logic (Self-Healing)
+      // 3. Double Capture Strategy (Warm-up + Final)
+      // First, run a "Warm-up" capture. This forces the browser to engage the rendering pipeline, 
+      // load fonts, and paint images, even if the result is blank or incomplete.
+      try {
+        await toBlob(cardRef.current, {
+          cacheBust: false, skipAutoScale: true, pixelRatio: 1, fontEmbedCSS: '',
+          filter: (node) => node.tagName !== 'LINK'
+        });
+      } catch (e) {
+        console.warn("Warm-up capture failed (expected)", e);
+      }
+
+      // Short delay after warm-up
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      // Now proceed to the "Real" capture with retry logic
       let blob: Blob | null = null;
       let captureAttempts = 0;
 
       while (!blob && captureAttempts < 3) {
         try {
-          // Mobile often fails on font embedding or huge images. 
           const generatedBlob = await toBlob(cardRef.current, {
             cacheBust: false,
             skipAutoScale: true,
             pixelRatio: 1,
             fontEmbedCSS: '',
-            filter: (node) => {
-              if (node.tagName === 'LINK') return false;
-              return true;
-            }
+            filter: (node) => node.tagName !== 'LINK'
           });
 
-          // Validate Blob Size (A full HD card should be > 50KB. Blank is usually < 10KB)
           if (generatedBlob && generatedBlob.size > 50000) {
             blob = generatedBlob;
           } else {
             console.warn(`Generated blob too small (${generatedBlob?.size} bytes). Retrying...`);
-            await new Promise(r => setTimeout(r, 500)); // Wait before retry
+            await new Promise(r => setTimeout(r, 500));
           }
         } catch (err) {
           console.warn("Capture attempt failed", err);
