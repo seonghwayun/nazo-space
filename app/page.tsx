@@ -318,11 +318,11 @@ export default function Home() {
           {data && (
             <>
               {/* Total Count Banner */}
-              <div className="flex flex-col items-center justify-center py-6 mb-2">
-                <span className="text-muted-foreground text-sm font-medium mb-1">지금까지 등록된 나조</span>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-black text-primary tracking-tighter">{data.totalCount}</span>
-                  <span className="text-lg font-bold text-muted-foreground">개</span>
+              <div className="flex justify-center py-6 mb-2">
+                <div className="flex items-baseline justify-center gap-1 text-muted-foreground text-sm font-medium">
+                  <span>현재 총</span>
+                  <span className="text-xl font-black text-primary tracking-tight">{data.totalCount}</span>
+                  <span>개의 나조가 등록되어 있습니다.</span>
                 </div>
               </div>
 
