@@ -86,15 +86,15 @@ export default function ReviewsPage() {
   }, [hasMore, isFetchingMore, isLoading, fetchReviews]);
 
   return (
-    <MainLayout padded>
-      <div className="max-w-screen-md mx-auto min-h-screen pb-20">
+    <MainLayout>
+      <div className="max-w-screen-md mx-auto px-4 pb-10">
         {/* Header */}
-        <div className="sticky top-0 bg-background/80 backdrop-blur-md z-10 py-4 mb-6 flex items-center gap-2 border-b">
+        <div className="sticky top-0 bg-background/95 backdrop-blur-md z-10 py-3 mb-2 flex items-center gap-2 border-b">
           <BackButton />
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            <h1 className="text-xl font-bold whitespace-nowrap shrink-0">모든 후기</h1>
+            <h1 className="text-lg font-bold whitespace-nowrap shrink-0">모든 후기</h1>
             {nazoTitle && (
-              <span className="text-base font-medium text-muted-foreground truncate border-l pl-2 border-border/60">
+              <span className="text-sm font-medium text-muted-foreground truncate border-l pl-2 border-border/60">
                 {nazoTitle}
               </span>
             )}
@@ -102,7 +102,7 @@ export default function ReviewsPage() {
         </div>
 
         {/* List */}
-        <div className="space-y-1">
+        <div className="space-y-0 divide-y divide-border/40">
           {reviews.map((review) => (
             <ReviewItem key={review._id} review={review} />
           ))}
@@ -115,7 +115,7 @@ export default function ReviewsPage() {
         </div>
 
         {/* Loading / Observer Trigger */}
-        <div ref={observerTarget} className="py-8 flex justify-center">
+        <div ref={observerTarget} className="py-4 flex justify-center">
           {(isLoading || isFetchingMore) && (
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           )}

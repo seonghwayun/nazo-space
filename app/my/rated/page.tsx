@@ -61,13 +61,14 @@ export default function MyRatedPage() {
   );
 
   return (
-    <MainLayout padded>
-      <div className="flex flex-col gap-6">
-        <div className="flex items-center gap-2">
+    <MainLayout>
+      <div className="max-w-screen-md mx-auto px-4 pb-10">
+        {/* Header */}
+        <div className="sticky top-0 bg-background/95 backdrop-blur-md z-10 py-3 mb-4 flex items-center gap-2 border-b -mx-4 px-4">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="-ml-2">
             <ChevronLeft className="h-6 w-6" />
           </Button>
-          <h1 className="text-xl font-bold">내가 평가한 나조</h1>
+          <h1 className="text-lg font-bold">내가 평가한 나조</h1>
         </div>
 
         {isLoading && page === 1 ? (
