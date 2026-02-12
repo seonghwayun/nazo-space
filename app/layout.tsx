@@ -34,6 +34,17 @@ export const metadata: Metadata = {
     title: "Nazo Space",
     description: "한국의 나조토키 플레이어를 위한 아카이브",
   },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
 };
 
 export const viewport: Viewport = {
