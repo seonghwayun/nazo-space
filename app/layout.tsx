@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   description: "한국의 나조토키 플레이어를 위한 아카이브, Nazo Space",
   metadataBase: new URL("https://nazo.respace.cc"), // Update with actual domain when deployed
   alternates: {
-    canonical: "/",
+    canonical: "./",
   },
   openGraph: {
     title: "Nazo Space",
