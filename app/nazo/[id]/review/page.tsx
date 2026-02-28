@@ -3,9 +3,10 @@
 import React, { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { ChevronLeft, Globe, Lock, Loader2 } from "lucide-react";
+import { ChevronLeft, Globe, Lock, Loader2, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { INazo } from "@/models/nazo";
 import Image from "next/image";
 
@@ -16,6 +17,7 @@ export default function NazoReviewPage() {
   const [nazo, setNazo] = useState<INazo | null>(null);
   const [review, setReview] = useState("");
   const [memo, setMemo] = useState("");
+  const [playedAt, setPlayedAt] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
@@ -39,6 +41,9 @@ export default function NazoReviewPage() {
           if (reviewData) {
             setReview(reviewData.review || "");
             setMemo(reviewData.memo || "");
+            if (reviewData.playedAt) {
+              setPlayedAt(new Date(reviewData.playedAt).toISOString().split('T')[0]);
+            }
           }
         }
       } catch (error) {
@@ -57,7 +62,7 @@ export default function NazoReviewPage() {
       const res = await fetch(`/api/review/nazo/${id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ review, memo }),
+        body: JSON.stringify({ review, memo, playedAt: playedAt ? new Date(playedAt) : null }),
       });
 
       if (!res.ok) throw new Error("Failed to save review");
@@ -147,6 +152,23 @@ export default function NazoReviewPage() {
         <div className="flex-1 min-w-0 flex flex-col justify-center">
           <h3 className="font-semibold text-base truncate">{nazo.originalTitle}</h3>
           <p className="text-sm text-muted-foreground truncate">{nazo.translatedTitle}</p>
+        </div>
+      </div>
+
+      {/* Played Date Section */}
+      <div className="space-y-3 mb-8">
+        <div className="flex items-center gap-2 text-base font-medium text-foreground">
+          <Calendar className="h-5 w-5 text-green-500" />
+          <span>플레이 날짜</span>
+        </div>
+        <div className="relative max-w-[200px]">
+          <Input
+            type="date"
+            value={playedAt}
+            onChange={(e) => setPlayedAt(e.target.value)}
+            className="w-full pr-10 cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+          />
+          <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
         </div>
       </div>
 

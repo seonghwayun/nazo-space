@@ -5,6 +5,7 @@ export interface IReview extends Document {
   nazoId: string;
   review?: string;
   memo?: string;
+  playedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -15,6 +16,7 @@ const ReviewSchema = new Schema<IReview>(
     nazoId: { type: String, required: true },
     review: { type: String },
     memo: { type: String },
+    playedAt: { type: Date },
   },
   {
     timestamps: true,

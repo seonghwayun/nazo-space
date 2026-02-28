@@ -14,6 +14,7 @@ interface ReviewItemProps {
       image?: string | null;
     };
     rate?: number | null;
+    playedAt?: string;
   };
 }
 
@@ -25,6 +26,7 @@ export function ReviewItem({ review }: ReviewItemProps) {
   const isLongText = (review.review?.length || 0) > 150;
 
   return (
+
     <div className="flex flex-col gap-3 p-4 rounded-xl bg-secondary/5 border border-border/40 hover:bg-secondary/10 hover:border-border/60 transition-all duration-200">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -40,6 +42,12 @@ export function ReviewItem({ review }: ReviewItemProps) {
           </div>
         )}
       </div>
+
+      {review.playedAt && (
+        <div className="text-xs text-muted-foreground">
+          플레이 날짜: {new Date(review.playedAt).toLocaleDateString()}
+        </div>
+      )}
 
       {review.review && (
         <div>

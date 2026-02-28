@@ -41,14 +41,14 @@ export async function POST(
 
     const { nazoId } = await params;
     const body = await req.json();
-    const { review, memo } = body;
+    const { review, memo, playedAt } = body;
     const userId = (session as any).user.id;
 
     await connectToDatabase();
 
     const updatedReview = await Review.findOneAndUpdate(
       { userId, nazoId },
-      { $set: { review, memo, userId, nazoId } },
+      { $set: { review, memo, playedAt, userId, nazoId } },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
 

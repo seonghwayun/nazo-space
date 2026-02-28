@@ -55,6 +55,7 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
   const [userRate, setUserRate] = useState<number | null>(null);
   const [userReview, setUserReview] = useState<string>("");
   const [userMemo, setUserMemo] = useState<string>(""); // Added memo state
+  const [userPlayedAt, setUserPlayedAt] = useState<string | null>(null); // Added playedAt state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false); // Edit modal state
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -99,6 +100,7 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
           if (data) {
             setUserReview(data.review || "");
             setUserMemo(data.memo || "");
+            setUserPlayedAt(data.playedAt || null);
           }
         }
 
@@ -183,6 +185,7 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
 
       setUserReview("");
       setUserMemo("");
+      setUserPlayedAt(null);
     } catch (error) {
       console.error("Failed to delete review", error);
       alert("리뷰 삭제에 실패했습니다.");
@@ -469,6 +472,11 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
 
               {userReview ? (
                 <div className="space-y-1">
+                  {userPlayedAt && (
+                    <div className="text-xs text-muted-foreground font-medium mb-1">
+                      플레이 날짜: {new Date(userPlayedAt).toLocaleDateString()}
+                    </div>
+                  )}
                   <div
                     className={`cursor-pointer hover:opacity-80 transition-opacity relative group`}
                     onClick={() => router.push(`/nazo/${id}/review`)}

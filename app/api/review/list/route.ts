@@ -49,6 +49,7 @@ export async function GET(req: NextRequest) {
       return {
         _id: r._id,
         review: r.review,
+        playedAt: r.playedAt,
         createdAt: r.createdAt,
         user: user ? {
           nickname: user.nickname,
