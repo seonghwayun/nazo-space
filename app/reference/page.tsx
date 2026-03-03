@@ -1,6 +1,6 @@
 import { MainLayout } from "@/components/layout/main-layout";
 import Link from "next/link";
-import { ChevronRight, Languages, Keyboard, Map, Shuffle } from "lucide-react";
+import { ChevronRight, Languages, Keyboard, Map, Shuffle, PawPrint } from "lucide-react";
 
 export default function ReferencePage() {
   return (
@@ -57,6 +57,22 @@ export default function ReferencePage() {
               <h3 className="font-semibold">도도부현 / 현청소재지</h3>
               <p className="text-xs text-muted-foreground mt-0.5">
                 일본의 행정구역과 현청소재지 지도입니다.
+              </p>
+            </div>
+            <ChevronRight className="h-5 w-5 text-muted-foreground" />
+          </Link>
+
+          <Link
+            href="/reference/jyuunisi"
+            className="flex items-center gap-4 p-4 bg-card rounded-xl border shadow-sm hover:shadow-md hover:bg-secondary/50 transition-all"
+          >
+            <div className="h-12 w-12 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center flex-shrink-0">
+              <PawPrint className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold">일본어 12지</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                일본어의 12지(십이지) 동물의 이름과 읽는 법을 확인하세요.
               </p>
             </div>
             <ChevronRight className="h-5 w-5 text-muted-foreground" />
