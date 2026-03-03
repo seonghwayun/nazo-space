@@ -4,7 +4,7 @@ import Nazo from "@/models/nazo";
 import Creator from "@/models/creator";
 import Tag from "@/models/tag";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 86400; // 24시간마다 갱신 (캐싱을 통해 빠른 응답 보장)
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://nazo.respace.cc";
