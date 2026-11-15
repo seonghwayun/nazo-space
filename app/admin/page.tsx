@@ -9,13 +9,11 @@ import { Loader2, ShieldAlert } from "lucide-react";
 import { Plus, User, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { TagFormModal } from "@/components/admin/tag-form-modal";
 
 export default function AdminPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [isRedirecting, setIsRedirecting] = useState(false);
-  const [isCreateTagModalOpen, setIsCreateTagModalOpen] = useState(false);
 
   useEffect(() => {
     if (status === "loading") return;
@@ -28,20 +26,6 @@ export default function AdminPage() {
       return () => clearTimeout(timer);
     }
   }, [session, status, router]);
-
-  const handleCreateTag = async (data: any) => {
-    const res = await fetch("/api/tag", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-
-    if (!res.ok) {
-      const errorData = await res.json();
-      alert(errorData.error || "Failed to create tag");
-      throw new Error("Failed to create tag");
-    }
-  };
 
   if (status === "loading" || (session?.user.isAdmin && !isRedirecting)) {
     // Show content only if loading or confirmed admin
@@ -73,20 +57,16 @@ export default function AdminPage() {
                   <User className="mr-2 h-5 w-5" /> Create New Creator
                 </Link>
               </Button>
-              <Button onClick={() => setIsCreateTagModalOpen(true)} variant="outline" className="w-full justify-start h-12 text-lg">
-                <Tag className="mr-2 h-5 w-5" /> Create New Tag
+              <Button asChild variant="outline" className="w-full justify-start h-12 text-lg">
+                <Link href="/admin/tag/new">
+                  <Tag className="mr-2 h-5 w-5" /> Create New Tag
+                </Link>
               </Button>
             </div>
 
             {/* Admin features will go here */}
           </div>
 
-          <TagFormModal
-            isOpen={isCreateTagModalOpen}
-            onClose={() => setIsCreateTagModalOpen(false)}
-            onSubmit={handleCreateTag}
-            title="Create New Tag"
-          />
         </MainLayout>
       );
     }
