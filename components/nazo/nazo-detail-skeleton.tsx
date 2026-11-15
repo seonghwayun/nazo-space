@@ -1,3 +1,4 @@
+import { Star } from "lucide-react";
 import { Skeleton, SkeletonText } from "@/components/ui/skeleton";
 
 /**
@@ -23,9 +24,14 @@ export function NazoDetailSkeleton() {
           <div className="flex flex-col gap-4">
             <div className="flex justify-center items-center py-1">
               <div className="flex items-center gap-4 px-6 py-1.5 border rounded-full shadow-sm">
+                {/* Same empty stars as the real rating control */}
                 <div className="flex gap-1.5">
                   {[1, 2, 3, 4, 5].map((i) => (
-                    <Skeleton key={i} className="w-8 h-8 rounded-full" />
+                    <Star
+                      key={i}
+                      className="w-8 h-8 text-transparent fill-muted-foreground/20"
+                      strokeWidth={0}
+                    />
                   ))}
                 </div>
                 <div className="w-px h-6 bg-border/50" />
