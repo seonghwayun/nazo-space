@@ -78,6 +78,8 @@ NazoSchema.index({ createdAt: -1 }); // For "Recently Added"
 NazoSchema.index({ averageRate: -1, rateCount: -1 }); // For "Top Rated"
 NazoSchema.index({ originalTitle: 1 }); // For Search
 NazoSchema.index({ translatedTitle: 1 }); // For Search
+NazoSchema.index({ creators: 1, createdAt: -1 }); // Creator pages, search counts / posters
+NazoSchema.index({ tags: 1, createdAt: -1 }); // Tag pages, search counts / posters
 
 // Prevent overwriting the model if it's already compiled (Next.js hot reload fix)
 const Nazo: Model<INazo> =
