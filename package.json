@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "migrate:images": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/migrate-blob-to-r2.mjs",
-    "test": "node --test \"lib/**/*.test.ts\""
+    "test": "node --test \"lib/**/*.test.ts\"",
+    "import:nazoma": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/import-nazoma.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1169.0",

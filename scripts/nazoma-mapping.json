@@ -1,0 +1,106 @@
+{
+  "_comment": "Edit and re-run `pnpm import:nazoma <xlsx>` to preview. creators: nazo.life maker → creator names (names matching an existing creator, ignoring case/space/_/-, are linked; others are created; unlisted makers are split on & ＆ + ＋ outside parentheses). titles: xlsx title → nazo.life title, for sheet typos. manual: xlsx titles missing from nazo.life, imported with maker = column C and no image. exclude: titles never imported (bundle sets). expand: set title → works inside (catalog item if present, else the set's maker and image).",
+  "creators": {
+    "タンブルウィード": [
+      "Tumbleweed"
+    ],
+    "Machihack!": [
+      "街ハック!"
+    ],
+    "ナゾトキゼペッツ": [
+      "謎解きゼペッツ"
+    ],
+    "エフェックス / アットビ": [
+      "EFEX"
+    ],
+    "タカラッシュ！": [
+      "takarush"
+    ],
+    "NAZO×NAZO劇団": [
+      "NAZO×NAZO"
+    ],
+    "Tri Möbius（トライメビウス）": [
+      "Tri Möbius"
+    ],
+    "早稲田大学謎解き企画algo": [
+      "algo"
+    ],
+    "TokiToki escapecafe": [
+      "tokitoki"
+    ],
+    "Primalade / プライマレード": [
+      "Primalade"
+    ],
+    "祝井ゆん/NEPPA": [
+      "祝井ゆん",
+      "NEPPA"
+    ],
+    "ハテナボックス／百兎秋": [
+      "ハテナボックス",
+      "百兎秋"
+    ]
+  },
+  "titles": {
+    "Lost&Inovate": "Lost&Innovate",
+    "InbeviTable Game": "IneviTable Game",
+    "めるくめる謎": "めくるめく謎",
+    "不思議の森のリドル": "不思議な森のリドル",
+    "The rectangle word": "the rectagle world",
+    "漢字テスト-魚編の漢字謎": "漢字テスト",
+    "ⵄǁ🝯ᱵ語のテスト↗": "ⵄǁ🝯ᱵ語のテスト",
+    "3匹のスケル豚 セット": "3匹のスケル豚",
+    "あああああ, あああああ": "あああああ, あああああ!",
+    "오니기리 가챠나조": "ミニおにぎりくじ"
+  },
+  "manual": [
+    "塗って！！",
+    "ふぁーすとのーと！",
+    "待ち合わせ",
+    "透明人間",
+    "ニコイチ",
+    "神★域",
+    "旨",
+    "9tickets",
+    "タバスコ",
+    "きめら。",
+    "OPEN",
+    "ALL ON ONE",
+    "慧眼探偵と16枚の蒼い写真",
+    "Mysterious Fairy Tale -Little Bloody Red Riding Hood-",
+    "Mysterious Fairy Tale -Snow White and Black Wishes-",
+    "花束探偵とハンカチーフ刑事の事件簿 〜純白のカーネーション〜"
+  ],
+  "exclude": [
+    "TEA4PARTYコンプリートセット",
+    "あああああ(4개세트)"
+  ],
+  "expand": {
+    "ナゾマ限定セット": [
+      "酔いどれ勇者からの生還",
+      "ザコモン酒場",
+      "ザコモンクリアファイル"
+    ],
+    "夕立工房 新作３点セット": [
+      "存在しない謎解き公演のパス",
+      "死の記録",
+      "入国審査"
+    ],
+    "おにぎり謎 3種セット": [
+      "おにぎり謎 さけ",
+      "おにぎり謎 うめ",
+      "おにぎり謎 たらこ"
+    ],
+    "焼肉謎 選べる3種盛り": [
+      "焼肉謎 -タン編-",
+      "焼肉謎 -カルビ編-",
+      "焼肉謎 -ホルモン編-",
+      "焼肉謎 -レバー編-",
+      "焼肉謎 -ロース編-"
+    ],
+    "防災謎解きゲーム 3種セット": [
+      "防災謎解きゲーム 地震",
+      "防災謎解きゲーム 水害",
+      "防災謎解きゲーム 火災"
+    ]
+  }
+}
