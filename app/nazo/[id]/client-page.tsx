@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
+import { staleNazos } from "@/lib/stale-marks";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
@@ -10,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ImageIcon, Loader2, PenTool, Share2, Plus, Edit3, Eye, MoreHorizontal, Star, Pencil, Globe } from "lucide-react";
 import { INazo } from "@/models/nazo";
 import { useSession } from "next-auth/react";
-import { NazoFormModal } from "@/components/admin/nazo-form-modal";
 import { LoginModal } from "@/components/auth/login-modal";
 import {
   DropdownMenu,
@@ -56,7 +56,6 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
   const [userReview, setUserReview] = useState<string>("");
   const [userMemo, setUserMemo] = useState<string>(""); // Added memo state
   const [userPlayedAt, setUserPlayedAt] = useState<string | null>(null); // Added playedAt state
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false); // Edit modal state
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
@@ -66,7 +65,7 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
     async function fetchNazo() {
       if (!id) return;
       // If we already have initial data matching the ID (which we should for SSR), skip fetch
-      if (initialNazo && initialNazo._id.toString() === id) {
+      if (initialNazo && initialNazo._id.toString() === id && !staleNazos.consume(String(id))) {
         setIsLoading(false);
         return;
       }
@@ -194,23 +193,6 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
 
 
 
-  const handleUpdateNazo = async (data: any) => {
-    try {
-      const res = await fetch(`/api/nazo/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      if (!res.ok) throw new Error("Failed to update nazo");
-
-      const updatedNazo = await res.json();
-      setNazo((prev: any) => ({ ...prev, ...updatedNazo }));
-    } catch (error) {
-      console.error("Failed to update nazo:", error);
-      alert("나조 수정에 실패했습니다.");
-    }
-  };
 
 
 
@@ -319,7 +301,7 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
                 className="text-white hover:bg-white/20 rounded-full h-14 w-14"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setIsEditModalOpen(true);
+                  router.push(`/nazo/${id}/edit`);
                 }}
               >
                 <Pencil className="!h-6 !w-6 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
@@ -565,17 +547,6 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
 
 
 
-      {
-        session?.user?.isAdmin && nazo && isEditModalOpen && (
-          <NazoFormModal
-            isOpen={isEditModalOpen}
-            onClose={() => setIsEditModalOpen(false)}
-            onSubmit={handleUpdateNazo}
-            initialData={nazo}
-            title="나조 수정"
-          />
-        )
-      }
 
       <LoginModal
         isOpen={isLoginModalOpen}

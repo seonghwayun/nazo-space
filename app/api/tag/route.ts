@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import connectToDatabase from "@/lib/db";
 import Tag from "@/models/tag";
+import { escapeRegex, mergeExactFirst } from "@/lib/search-utils";
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,13 +12,17 @@ export async function GET(request: NextRequest) {
 
     await connectToDatabase();
 
-    let filter = {};
-    if (query) {
-      filter = { name: { $regex: query, $options: "i" } };
+    if (!query?.trim()) {
+      const tags = await Tag.find({}).limit(50);
+      return NextResponse.json({ results: tags });
     }
 
-    const tags = await Tag.find(filter).limit(50);
-    return NextResponse.json({ results: tags });
+    const pattern = escapeRegex(query.trim());
+    const [exact, tags] = await Promise.all([
+      Tag.findOne({ name: { $regex: `^${pattern}$`, $options: "i" } }),
+      Tag.find({ name: { $regex: pattern, $options: "i" } }).limit(50),
+    ]);
+    return NextResponse.json({ results: mergeExactFirst(exact, tags) });
   } catch (error) {
     console.error("Failed to fetch tags:", error);
     return NextResponse.json(
