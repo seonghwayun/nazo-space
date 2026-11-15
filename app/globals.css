@@ -141,3 +141,18 @@
     background: linear-gradient(transparent 58%, color-mix(in oklab, var(--marker) 85%, transparent) 58%);
   }
 }
+
+/* Wrong answer on the practice pages. */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+@layer components {
+  .animate-shake {
+    animation: shake 0.35s ease-in-out;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .animate-shake { animation: none; }
+  }
+}
