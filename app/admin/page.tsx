@@ -8,7 +8,7 @@ import { Loader2, ShieldAlert } from "lucide-react";
 
 import { Plus, User, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { NazoFormModal } from "@/components/admin/nazo-form-modal";
+import Link from "next/link";
 import { CreatorFormModal } from "@/components/admin/creator-form-modal";
 import { TagFormModal } from "@/components/admin/tag-form-modal";
 
@@ -16,7 +16,6 @@ export default function AdminPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [isRedirecting, setIsRedirecting] = useState(false);
-  const [isCreateNazoModalOpen, setIsCreateNazoModalOpen] = useState(false);
   const [isCreateCreatorModalOpen, setIsCreateCreatorModalOpen] = useState(false);
   const [isCreateTagModalOpen, setIsCreateTagModalOpen] = useState(false);
 
@@ -31,22 +30,6 @@ export default function AdminPage() {
       return () => clearTimeout(timer);
     }
   }, [session, status, router]);
-
-  const handleCreateNazo = async (data: any) => {
-    const res = await fetch("/api/nazo", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-
-    if (!res.ok) {
-      throw new Error("Failed to create nazo");
-    }
-
-    // Optional: Refresh or redirect to the new nazo
-    const newNazo = await res.json();
-    router.push(`/nazo/${newNazo._id}`);
-  };
 
   const handleCreateCreator = async (data: any) => {
     const res = await fetch("/api/creator", {
@@ -95,8 +78,10 @@ export default function AdminPage() {
             </div>
 
             <div className="flex flex-col gap-4 max-w-sm">
-              <Button onClick={() => setIsCreateNazoModalOpen(true)} className="w-full justify-start h-12 text-lg">
-                <Plus className="mr-2 h-5 w-5" /> Create New Nazo
+              <Button asChild className="w-full justify-start h-12 text-lg">
+                <Link href="/admin/nazo/new">
+                  <Plus className="mr-2 h-5 w-5" /> Create New Nazo
+                </Link>
               </Button>
               <Button onClick={() => setIsCreateCreatorModalOpen(true)} variant="outline" className="w-full justify-start h-12 text-lg">
                 <User className="mr-2 h-5 w-5" /> Create New Creator
@@ -108,13 +93,6 @@ export default function AdminPage() {
 
             {/* Admin features will go here */}
           </div>
-
-          <NazoFormModal
-            isOpen={isCreateNazoModalOpen}
-            onClose={() => setIsCreateNazoModalOpen(false)}
-            onSubmit={handleCreateNazo}
-            title="Create New Nazo"
-          />
 
           <CreatorFormModal
             isOpen={isCreateCreatorModalOpen}
