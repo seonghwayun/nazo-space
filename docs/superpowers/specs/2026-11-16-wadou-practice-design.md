@@ -19,13 +19,14 @@ Non-goals:
 - Admin UI for words. The import script is the only way in.
 
 Anti-goals:
-- Publishing content we have no right to. The Korean meanings in Nazopt's Anki deck (likely
-  from Naver) must not appear on the site.
+- Republishing the deck's dictionary text wholesale (full sense lists, example sentences).
 - Heavy responses or noticeable lag per puzzle.
 
 ## Constraints
-- **Licensing.** Word spellings, readings, and kanji on/kun readings are facts and may be used.
-  Korean meanings are written fresh (see Data). The deck's 훈음 (`hunDaily`, e.g. 사이 간) is not used.
+- **Licensing.** Word spellings, readings, and kanji on/kun readings are facts. For meanings, only
+  the first short sense of each word is used (see Data). The user accepted the remaining gray area:
+  these are one-word equivalents, but there are ~3,000 of them taken from the deck. The deck's
+  훈음 (`hunDaily`, e.g. 사이 간), full senses, and example sentences are not used.
 - Next.js 16 app router, Mongoose on MongoDB (`lib/db.ts` connection cache), deployed serverless.
 - Node 24 (`node:sqlite` is available to scripts).
 
@@ -48,15 +49,15 @@ list never leaves the server.
 - Duplicate expressions keep the first one, easier JLPT level first.
 - Kanji on/kun readings for every kanji that appears, for hint 2.
 
-**Meanings:** a script asks Claude (`claude-haiku-5-5`, batches of ~100 words) for a short
-Korean gloss of each word, one or two senses, at most ~20 characters. The prompt gets only the
-expression and reading, never the deck's meaning. Output is reviewed by spot-check and committed.
+**Meanings:** the first sense of the deck's `summary`, cut the same way as Nazopt's
+`PuzzleSource.shortMeaning`. Drop a leading `1. `, then cut at the next ` 2. `.
+`1. 시간 2. 때 3. 시각` → `시간`. A `nazoTerm` keeps its own `meaning`. An AI-written gloss was
+considered and rejected by the user as more than this needs.
 
 **Pipeline** (two scripts, mirroring `import:mfy`'s dry-run / `--apply` style):
-1. `scripts/build-practice-words.mjs <Content.sqlite path>` reads the DB and calls Claude for
-   meanings (`ANTHROPIC_API_KEY`). It writes `data/practice-words.json`
-   (`{ words: [...], kanji: [...] }`). The script can be resumed: words that already have a
-   meaning in the existing JSON are skipped.
+1. `scripts/build-practice-words.mjs <Content.sqlite path>` reads the DB with `node:sqlite` and
+   writes `data/practice-words.json` (`{ words: [...], kanji: [...] }`). The cutting logic lives in
+   `lib/practice/source.ts` so it can be tested.
 2. `pnpm import:practice` (`scripts/import-practice.mjs`) upserts the JSON into MongoDB.
    Dry run by default, `--apply` to write.
 
@@ -121,7 +122,7 @@ level and builds the index once. It reloads after 1 hour so re-imports show up w
 
 ## Builder's calls (my decisions, user can override)
 - Bottom-nav placement and the name 연습.
-- Haiku model for meanings, gloss length, and committing `data/practice-words.json`.
+- Committing `data/practice-words.json` (~300 KB) so the import doesn't need the Nazopt repo.
 - 1-hour cache TTL, 50 generation tries, last-30 exclude list.
 - No server-side answer check.
 - An error state ("문제를 불러오지 못했어요" + retry) if the API fails.
@@ -130,5 +131,5 @@ level and builds the index once. It reloads after 1 hour so re-imports show up w
 - `lib/practice/wadou.test.ts` (node --test, like the other `lib` tests), using a small fixed word list:
   unique-answer rejection, distinct outers, distractors never equal outers or the answer,
   id round-trip, arrow direction.
-- A grading-normalization test.
+- Tests for grading normalization and for `shortMeaning` / the word filter.
 - Manual run of the page on mobile width.
