@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ReviewItem } from "./review-item";
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton, SkeletonText } from "@/components/ui/skeleton";
 
 export function ReviewListPreview({ nazoId }: { nazoId: string }) {
   const [reviews, setReviews] = useState<any[]>([]);
@@ -36,16 +36,24 @@ export function ReviewListPreview({ nazoId }: { nazoId: string }) {
   }, [nazoId]);
 
   if (isLoading) {
+    // Mirrors the loaded list below (header + ReviewItem cards).
     return (
-      <div className="space-y-4 py-8">
-        <h3 className="text-lg font-bold">참가자 후기</h3>
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="flex gap-4">
-              <Skeleton className="w-10 h-10 rounded-full" />
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-4 w-full" />
+      <div className="space-y-4 pt-8 border-t border-border">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-bold">플레이 후기</h3>
+          <div className="h-8" />
+        </div>
+        <div className="space-y-1">
+          {[1, 2].map((i) => (
+            <div key={i} className="flex flex-col gap-3 p-4 rounded-xl border border-border/40">
+              <div className="flex items-center justify-between">
+                <SkeletonText className="text-sm font-semibold flex-1" barClassName="w-32" />
+                <Skeleton className="h-[22px] w-12 rounded-md" />
+              </div>
+              <SkeletonText className="text-xs" barClassName="w-36" />
+              <div>
+                <SkeletonText className="text-sm leading-relaxed" />
+                <SkeletonText className="text-sm leading-relaxed" barClassName="w-2/3" />
               </div>
             </div>
           ))}

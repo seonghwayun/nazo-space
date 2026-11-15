@@ -9,7 +9,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { NazoPortraitCard } from "@/components/nazo/nazo-portrait-card";
 import { NazoPortraitCardSkeleton } from "@/components/nazo/nazo-portrait-card-skeleton";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton, SkeletonText } from "@/components/ui/skeleton";
 import { ChevronRight, Pencil, Check, X, Mail } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
@@ -91,28 +91,16 @@ export default function MyPage() {
       <MainLayout padded>
         <div className="flex flex-col gap-8 h-full">
           <div className="flex items-center gap-4 p-4 bg-card rounded-lg border shadow-sm">
-            <Skeleton className="w-16 h-16 rounded-full" />
-            <div className="flex-1 space-y-2">
-              <Skeleton className="h-6 w-32" />
-              <Skeleton className="h-4 w-48" />
+            <Skeleton className="w-16 h-16 rounded-full shrink-0" />
+            <div className="flex-1">
+              <SkeletonText className="text-xl font-bold" barClassName="w-32" />
+              <SkeletonText className="text-sm" barClassName="w-48" />
             </div>
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Skeleton className="h-6 w-32" />
-              <Skeleton className="h-4 w-12" />
-            </div>
-            <div className="flex overflow-x-auto gap-4 pb-4 -mx-4 px-4 scrollbar-hide">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="w-[140px] flex-shrink-0">
-                  <NazoPortraitCardSkeleton className="w-full" hideRating />
-                  <div className="mt-1 flex items-center justify-center">
-                    <Skeleton className="h-4 w-20" />
-                  </div>
-                </div>
-              ))}
-            </div>
+            <RatedSectionHeader />
+            <RatedNazoListSkeleton />
           </div>
         </div>
       </MainLayout>
@@ -241,24 +229,10 @@ export default function MyPage() {
 
 
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-lg">내가 평가한 나조</h3>
-            <Link href="/my/rated" className="text-sm text-muted-foreground flex items-center hover:text-foreground">
-              더보기 <ChevronRight className="h-4 w-4" />
-            </Link>
-          </div>
+          <RatedSectionHeader />
 
           {isRatedLoading ? (
-            <div className="flex overflow-x-auto gap-4 pb-4 -mx-4 px-4 scrollbar-hide">
-              {[1, 2, 3, 4, 5].map(i => (
-                <div key={i} className="w-[140px] flex-shrink-0">
-                  <NazoPortraitCardSkeleton className="w-full" hideRating />
-                  <div className="mt-1 flex items-center justify-center">
-                    <Skeleton className="h-4 w-20" />
-                  </div>
-                </div>
-              ))}
-            </div>
+            <RatedNazoListSkeleton />
           ) : ratedNazos.length > 0 ? (
             <div className="flex overflow-x-auto gap-4 pb-4 -mx-4 px-4 scrollbar-hide">
               {ratedNazos.map((item) => (
@@ -305,5 +279,30 @@ export default function MyPage() {
         </div>
       </div>
     </MainLayout>
+  );
+}
+
+function RatedSectionHeader() {
+  return (
+    <div className="flex items-center justify-between">
+      <h3 className="font-semibold text-lg">내가 평가한 나조</h3>
+      <Link href="/my/rated" className="text-sm text-muted-foreground flex items-center hover:text-foreground">
+        더보기 <ChevronRight className="h-4 w-4" />
+      </Link>
+    </div>
+  );
+}
+
+/** Mirrors the rated-nazo row: 140px portrait cards with a "내 평점" line under each. */
+function RatedNazoListSkeleton() {
+  return (
+    <div className="flex overflow-x-auto gap-4 pb-4 -mx-4 px-4 scrollbar-hide">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <div key={i} className="w-[140px] flex-shrink-0">
+          <NazoPortraitCardSkeleton className="w-full" hideRating />
+          <SkeletonText className="mt-1 text-xs text-center" barClassName="w-20" />
+        </div>
+      ))}
+    </div>
   );
 }
