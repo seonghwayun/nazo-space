@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Star } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Star, Eye } from "lucide-react";
 
 interface ReviewItemProps {
   review: {
     _id: string;
     review?: string;
+    hasSpoiler?: boolean;
     createdAt: string;
     user: {
       nickname: string;
@@ -20,6 +20,8 @@ interface ReviewItemProps {
 
 export function ReviewItem({ review }: ReviewItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isRevealed, setIsRevealed] = useState(false);
+  const isHidden = !!review.hasSpoiler && !isRevealed;
 
   // Heuristic: if text is longer than 150 chars, it *might* need expansion. 
   // A robust solution would use ref and scrollHeight, but this is a good start.
@@ -31,13 +33,16 @@ export function ReviewItem({ review }: ReviewItemProps) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="font-semibold text-sm">{review.user.nickname}</span>
+          {review.hasSpoiler && (
+            <span className="text-[11px] font-semibold text-stamp bg-stamp/10 px-1.5 py-0.5 rounded">스포일러</span>
+          )}
           <span className="text-xs text-muted-foreground">
             {new Date(review.review ? review.createdAt : "").toLocaleDateString()}
           </span>
         </div>
         {review.rate && (
-          <div className="flex items-center gap-0.5 text-xs font-medium bg-yellow-400/10 text-yellow-600 px-2 py-0.5 rounded-md border border-yellow-400/20">
-            <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
+          <div className="flex items-center gap-0.5 text-xs font-medium bg-star/10 text-foreground px-2 py-0.5 rounded-md border border-star/30">
+            <Star className="w-3 h-3 fill-star text-star" />
             <span>{review.rate.toFixed(1)}</span>
           </div>
         )}
@@ -50,14 +55,24 @@ export function ReviewItem({ review }: ReviewItemProps) {
       )}
 
       {review.review && (
-        <div>
+        <div className="relative">
           <p
+            aria-hidden={isHidden}
             className={`text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap ${!isExpanded ? "line-clamp-3" : ""
-              }`}
+              } ${isHidden ? "blur-[6px] select-none" : ""}`}
           >
             {review.review}
           </p>
-          {isLongText && (
+          {isHidden && (
+            <button
+              type="button"
+              onClick={() => setIsRevealed(true)}
+              className="absolute inset-0 flex items-center justify-center gap-1.5 rounded-md bg-secondary/50 text-sm font-semibold"
+            >
+              <Eye className="h-4 w-4" /> 스포일러가 있어요 · 탭해서 보기
+            </button>
+          )}
+          {isLongText && !isHidden && (
             <button
               onClick={() => setIsExpanded(!isExpanded)}
               className="text-xs text-muted-foreground hover:text-foreground font-medium mt-1 underline-offset-4 hover:underline"

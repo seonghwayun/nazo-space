@@ -8,16 +8,12 @@ import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 // import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ImageIcon, Loader2, PenTool, Share2, Plus, Edit3, Eye, MoreHorizontal, Star, Pencil, Globe } from "lucide-react";
+import { ChevronLeft, PenTool, Share2, Pencil, Plus } from "lucide-react";
 import { INazo } from "@/models/nazo";
 import { useSession } from "next-auth/react";
 import { LoginModal } from "@/components/auth/login-modal";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { MyLogCard, type PlayLog } from "@/components/log/my-log-card";
+import { useToast } from "@/components/ui/toast";
 
 // Helper to generate a consistent pastel color from a string
 function stringToColor(str: string) {
@@ -52,14 +48,12 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
   const [nazo, setNazo] = useState<INazo | null>(initialNazo);
   const [isLoading, setIsLoading] = useState(!initialNazo);
   const { data: session } = useSession();
-  const [userRate, setUserRate] = useState<number | null>(null);
-  const [userReview, setUserReview] = useState<string>("");
-  const [userMemo, setUserMemo] = useState<string>(""); // Added memo state
-  const [userPlayedAt, setUserPlayedAt] = useState<string | null>(null); // Added playedAt state
+  const toast = useToast();
+  const [myLog, setMyLog] = useState<PlayLog | null>(null);
+  const [isLogBusy, setIsLogBusy] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-  const [isReviewExpanded, setIsReviewExpanded] = useState(false);
 
   useEffect(() => {
     async function fetchNazo() {
@@ -86,115 +80,38 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
   }, [id, initialNazo]);
 
   useEffect(() => {
-    async function fetchUserData() {
-      if (!id || !session?.user) return;
-      try {
-        const [reviewRes, rateRes] = await Promise.all([
-          fetch(`/api/review/nazo/${id}`),
-          fetch(`/api/rate/nazo/${id}`)
-        ]);
-
-        if (reviewRes.ok) {
-          const data = await reviewRes.json();
-          if (data) {
-            setUserReview(data.review || "");
-            setUserMemo(data.memo || "");
-            setUserPlayedAt(data.playedAt || null);
-          }
-        }
-
-        if (rateRes.ok) {
-          const data = await rateRes.json();
-          if (data) {
-            setUserRate(data.rate);
-          }
-        }
-      } catch (error) {
-        console.error("Failed to fetch user data", error);
-      }
-    }
-    fetchUserData();
+    if (!id || !session?.user) return;
+    fetch(`/api/log/nazo/${id}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((log) => setMyLog(log))
+      .catch((error) => console.error("Failed to fetch play log", error));
   }, [id, session]);
 
-  const checkAuth = () => {
+  const openLogForm = () => {
     if (!session) {
       setIsLoginModalOpen(true);
-      return false;
+      return;
     }
-    return true;
+    router.push(`/nazo/${id}/review`);
   };
 
-  const handleSaveRate = async (rate: number) => {
-    if (!checkAuth()) return;
-    if (!id) return;
-
-    // Optimistic Update
-    const previousRate = userRate;
-    setUserRate(rate);
-
+  const addToUnplayed = async () => {
+    setIsLogBusy(true);
     try {
-      // Save Rate
-      const rateRes = await fetch(`/api/rate/nazo/${id}`, {
-        method: "POST",
+      const res = await fetch(`/api/log/nazo/${id}`, {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rate }),
+        body: JSON.stringify({ status: "unplayed" }),
       });
-
-      if (!rateRes.ok) throw new Error("Failed to save rate");
-
-      // Ideally the server returns the same rate we sent, or updated stats.
-      // We can update nazo stats here if the API returned them, but for userRate, we already set it.
-      const rateData = await rateRes.json();
-      // Ensure state is consistent with server (optional, but good practice if server sanitizes input)
-      setUserRate(rateData.rate);
-    } catch (error) {
-      console.error(error);
-      // Revert on failure
-      setUserRate(previousRate);
-      alert("평점 저장에 실패했습니다.");
+      if (!res.ok) throw new Error();
+      setMyLog(await res.json());
+      toast("쌓아둔 나조에 담았어요");
+    } catch {
+      toast("담지 못했어요. 잠시 후 다시 시도해 주세요.", "error");
+    } finally {
+      setIsLogBusy(false);
     }
   };
-
-
-
-  const handleRemoveRate = async () => {
-    if (!id) return;
-    try {
-      const res = await fetch(`/api/rate/nazo/${id}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) throw new Error("Failed to delete rate");
-
-      setUserRate(null);
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
-  };
-
-  const handleDeleteReview = async () => {
-    if (!id) return;
-    try {
-      const res = await fetch(`/api/review/nazo/${id}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) throw new Error("Failed to delete review");
-
-      setUserReview("");
-      setUserMemo("");
-      setUserPlayedAt(null);
-    } catch (error) {
-      console.error("Failed to delete review", error);
-      alert("리뷰 삭제에 실패했습니다.");
-    }
-  };
-
-
-
-
-
 
   if (isLoading) {
     return <NazoDetailSkeleton />;
@@ -246,28 +163,30 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
             <Button
               variant="ghost"
               size="icon"
-              className="text-white hover:bg-white/20 rounded-full h-14 w-14"
+              className="text-white bg-black/25 backdrop-blur-sm hover:bg-black/40 hover:text-white rounded-full h-11 w-11"
               onClick={(e) => {
                 e.stopPropagation();
                 router.back();
               }}
+              aria-label="뒤로"
             >
-              <ChevronLeft className="!h-10 !w-10 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
+              <ChevronLeft className="!h-7 !w-7" />
             </Button>
           </div>
 
           {session?.user?.isAdmin && (
-            <div className="fixed top-4 right-20 z-50">
+            <div className="fixed top-4 right-[68px] z-50">
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-white hover:bg-white/20 rounded-full h-14 w-14"
+                className="text-white bg-black/25 backdrop-blur-sm hover:bg-black/40 hover:text-white rounded-full h-11 w-11"
                 onClick={(e) => {
                   e.stopPropagation();
                   router.push(`/nazo/${id}/edit`);
                 }}
+                aria-label="나조 수정 (관리자)"
               >
-                <Pencil className="!h-6 !w-6 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
+                <Pencil className="!h-5 !w-5" />
               </Button>
             </div>
           )}
@@ -276,185 +195,53 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
             <Button
               variant="ghost"
               size="icon"
-              className="text-white hover:bg-white/20 rounded-full h-14 w-14"
+              className="text-white bg-black/25 backdrop-blur-sm hover:bg-black/40 hover:text-white rounded-full h-11 w-11"
               onClick={(e) => {
                 e.stopPropagation();
                 setIsShareModalOpen(true);
               }}
+              aria-label="공유"
             >
-              <Share2 className="!h-8 !w-8 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
+              <Share2 className="!h-5 !w-5" />
             </Button>
           </div>
 
-          <div className="absolute bottom-0 left-0 w-full p-6 pt-12 z-10">
-            <h1 className="text-3xl font-bold text-white mb-2 drop-shadow-md">{nazo.originalTitle}</h1>
-            <div className="text-sm flex flex-wrap gap-2 items-center mb-1 text-white/90 drop-shadow-sm">
-              <span>
-                평균평점 <span className="font-bold text-white">{nazo.averageRate ? nazo.averageRate.toFixed(1) : "0.0"}</span>
-                <span className="text-white/70 ml-1 font-normal">({nazo.rateCount || 0})</span>
-              </span>
-              <span>•</span>
-              <span>표기난이도 <span className="font-bold text-white">{nazo.difficulty ? nazo.difficulty : "불명"}</span></span>
-              <span>•</span>
-              <span>예상시간 <span className="font-bold text-white">{nazo.estimatedTime || "불명"}</span></span>
-            </div>
+          <div className="absolute bottom-0 left-0 w-full px-6 pt-12 pb-10 z-10">
+            <h1 className="text-3xl font-bold text-white mb-1 drop-shadow-md text-balance">{nazo.originalTitle}</h1>
+            {nazo.translatedTitle && (
+              <p className="text-sm text-white/80 drop-shadow-sm">{nazo.translatedTitle}</p>
+            )}
           </div>
         </div>
 
 
 
-        {/* Action Buttons Row */}
-        {/* User Interaction Section */}
-        <div className="p-6 border-b border-border bg-background">
-          <div className="flex flex-col gap-4">
-            {/* Rating Stars - Fancy Pill Design */}
-            <div className="flex justify-center items-center py-1">
-              <div className="flex items-center gap-4 px-6 py-1.5 bg-gradient-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 border rounded-full shadow-sm hover:shadow-md transition-all duration-300">
-                <div className="flex gap-1.5">
-                  {[1, 2, 3, 4, 5].map((index) => {
-                    // Calculate fill for 0.5 steps
-                    const fill = Math.max(0, Math.min(1, (userRate || 0) - (index - 1)));
-                    return (
-                      <div
-                        key={index}
-                        className="relative cursor-pointer w-8 h-8 transition-transform hover:scale-110 active:scale-95"
-                      >
-                        {/* Background Star (Gray) */}
-                        <Star
-                          className="absolute inset-0 w-full h-full text-transparent fill-muted-foreground/20"
-                          strokeWidth={0}
-                        />
+        {/* Facts */}
+        <dl className="relative z-10 -mt-5 mx-4 grid grid-cols-3 rounded-2xl bg-card border shadow-sm divide-x">
+          <Fact label="평균 별점">
+            {nazo.rateCount ? (
+              <>
+                <span className="text-star">★</span>
+                {(nazo.averageRate ?? 0).toFixed(1)}
+                <span className="text-xs font-normal text-muted-foreground ml-0.5">({nazo.rateCount})</span>
+              </>
+            ) : (
+              <span className="font-normal text-muted-foreground">아직 없음</span>
+            )}
+          </Fact>
+          <Fact label="난이도">{nazo.difficulty || "미정"}</Fact>
+          <Fact label="예상 시간">{nazo.estimatedTime || "미정"}</Fact>
+        </dl>
 
-                        {/* Foreground Star (Yellow) - Clipped */}
-                        <div
-                          className="absolute inset-0 overflow-hidden"
-                          style={{ width: `${fill * 100}%` }}
-                        >
-                          <Star
-                            className="w-8 h-8 text-transparent fill-yellow-400 drop-shadow-sm"
-                            strokeWidth={0}
-                          />
-                        </div>
-
-                        {/* Interaction Layers */}
-                        <div
-                          className="absolute inset-y-0 left-0 w-1/2 z-10"
-                          onClick={() => handleSaveRate(index - 0.5)}
-                        />
-                        <div
-                          className="absolute inset-y-0 right-0 w-1/2 z-10"
-                          onClick={() => handleSaveRate(index)}
-                        />
-                      </div>
-                    )
-                  })}
-                </div>
-
-                {/* Vertical Divider */}
-                <div className="w-px h-6 bg-border/50" />
-
-                {/* Score Number */}
-                <span className="text-xl font-bold tabular-nums text-foreground min-w-[1.8em] text-center tracking-tight">
-                  {userRate ? userRate.toFixed(1) : <span className="text-muted-foreground/30 text-lg">-</span>}
-                </span>
-              </div>
-            </div>
-
-            <div className="h-px w-full bg-border/60" />
-
-            {/* Review / Comment Area */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-muted-foreground/80">내 리뷰</span>
-                {userReview ? (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 hover:bg-muted focus-visible:ring-0"
-                      >
-                        <MoreHorizontal className="h-5 w-5 text-muted-foreground" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => router.push(`/nazo/${id}/review`)}>
-                        <Edit3 className="mr-2 h-4 w-4" />
-                        <span>수정</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={handleDeleteReview} className="text-red-600 focus:text-red-600 focus:bg-red-50">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="mr-2 h-4 w-4"
-                        >
-                          <path d="M3 6h18" />
-                          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                        </svg>
-                        <span>삭제</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                ) : (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0 hover:bg-muted"
-                    onClick={() => {
-                      if (checkAuth()) router.push(`/nazo/${id}/review`);
-                    }}
-                  >
-                    <Edit3 className="h-5 w-5 text-muted-foreground" />
-                  </Button>
-                )}
-              </div>
-
-              {userReview ? (
-                <div className="space-y-1">
-                  {userPlayedAt && (
-                    <div className="text-xs text-muted-foreground font-medium mb-1">
-                      플레이 날짜: {new Date(userPlayedAt).toLocaleDateString()}
-                    </div>
-                  )}
-                  <div
-                    className={`cursor-pointer hover:opacity-80 transition-opacity relative group`}
-                    onClick={() => router.push(`/nazo/${id}/review`)}
-                  >
-                    <p className={`text-base text-foreground font-medium whitespace-pre-wrap leading-relaxed ${!isReviewExpanded ? "line-clamp-3" : ""}`}>
-                      {userReview}
-                    </p>
-                  </div>
-                  {userReview.length > 100 && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsReviewExpanded(!isReviewExpanded);
-                      }}
-                      className="text-sm text-muted-foreground hover:text-foreground font-medium"
-                    >
-                      {isReviewExpanded ? "접기" : "...더보기"}
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <div
-                  className="cursor-pointer hover:opacity-70 transition-opacity"
-                  onClick={() => {
-                    if (checkAuth()) router.push(`/nazo/${id}/review`);
-                  }}
-                >
-                  <p className="text-sm text-muted-foreground">이 작품에 대한 생각을 자유롭게 남겨주세요.</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+        <div className="h-4" />
+        <MyLogCard
+          nazoId={String(nazo._id)}
+          log={myLog}
+          isSignedIn={!!session}
+          onRequireLogin={() => setIsLoginModalOpen(true)}
+          onAddUnplayed={addToUnplayed}
+          isBusy={isLogBusy}
+        />
 
         {/* Content Section */}
         <div className="p-6 space-y-6">
@@ -475,7 +262,7 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
                     <Link
                       key={creator._id}
                       href={`/creator/${creator._id}`}
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-black/5 hover:opacity-80 transition-opacity"
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-black/5 text-slate-900 hover:opacity-80 transition-opacity"
                       style={{ backgroundColor: bgColor }}
                     >
                       <PenTool className="h-3 w-3 opacity-60" />
@@ -506,6 +293,14 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
 
           <ReviewListPreview nazoId={nazo._id as unknown as string} />
         </div>
+
+        {/* Sticky record button */}
+        <div className="sticky bottom-0 z-20 px-4 pt-6 pb-3 bg-gradient-to-t from-background via-background to-transparent">
+          <Button size="lg" className="w-full h-12 text-base rounded-xl" onClick={openLogForm}>
+            {myLog?.status === "played" ? <Pencil /> : <Plus />}
+            {myLog?.status === "played" ? "기록 수정하기" : "플레이 기록하기"}
+          </Button>
+        </div>
       </div>
 
 
@@ -531,5 +326,14 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
         alt={nazo.originalTitle}
       />
     </div >
+  );
+}
+
+function Fact({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col items-center gap-0.5 px-2 py-3 min-w-0">
+      <dt className="text-[11px] text-muted-foreground">{label}</dt>
+      <dd className="text-sm font-bold truncate max-w-full">{children}</dd>
+    </div>
   );
 }

@@ -5,7 +5,8 @@ import Nazo from "@/models/nazo";
 import "@/models/creator";
 import "@/models/tag";
 import { authOptions } from "@/lib/auth";
-
+import { andAll, nazoListConditions, nazoSort } from "@/lib/nazo-query";
+import { isObjectIdHex } from "@/lib/image-key";
 
 export async function GET(req: NextRequest) {
   try {
@@ -14,16 +15,19 @@ export async function GET(req: NextRequest) {
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "20", 10);
     const skip = (page - 1) * limit;
+    const sort = nazoSort(searchParams.get("sort"));
 
-    const nazos = await Nazo.find()
-      .sort({ createdAt: -1 })
+    const filter = andAll({}, await nazoListConditions(searchParams));
+
+    const nazos = await Nazo.find(filter)
+      .sort(sort)
       .skip(skip)
       .limit(limit)
       .populate("creators", "name")
       .populate("tags", "name")
       .lean();
 
-    const total = await Nazo.countDocuments();
+    const total = await Nazo.countDocuments(filter);
 
     return NextResponse.json({
       data: nazos,
@@ -49,6 +53,10 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     delete body.createdAt;
     delete body.updatedAt;
+    // A client-supplied _id is allowed only as the id reserved by /api/upload for this nazo's image.
+    if (body._id !== undefined && !isObjectIdHex(body._id)) {
+      return NextResponse.json({ error: "Invalid nazo id" }, { status: 400 });
+    }
     await dbConnect();
 
     const nazo = await Nazo.create(body);

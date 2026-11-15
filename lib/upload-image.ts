@@ -44,23 +44,28 @@ export async function compressImage(file: File): Promise<Blob> {
   return blob;
 }
 
-/** Compress an image and upload it to R2 via a presigned URL. Returns the public URL. */
-export async function uploadImage(file: File): Promise<string> {
+/**
+ * Compress an image and upload it to R2 via a presigned URL, stored under the
+ * nazo's id. Pass the id of an existing nazo; for a new one the server reserves
+ * an id, which must then be used to create the nazo.
+ */
+export async function uploadImage(file: File, nazoId?: string): Promise<{ url: string; nazoId: string }> {
   const body = await compressImage(file);
   const contentType = body.type || file.type;
 
   const res = await fetch("/api/upload", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ contentType, size: body.size }),
+    body: JSON.stringify({ contentType, size: body.size, nazoId }),
   });
   if (!res.ok) {
     const { error } = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error(`Failed to get upload URL: ${error}`);
   }
-  const { uploadUrl, publicUrl } = (await res.json()) as {
+  const { uploadUrl, publicUrl, nazoId: keyNazoId } = (await res.json()) as {
     uploadUrl: string;
     publicUrl: string;
+    nazoId: string;
   };
 
   const put = await fetch(uploadUrl, {
@@ -75,5 +80,5 @@ export async function uploadImage(file: File): Promise<string> {
     throw new Error(`Upload failed: ${put.status} ${put.statusText}`);
   }
 
-  return publicUrl;
+  return { url: publicUrl, nazoId: keyNazoId };
 }

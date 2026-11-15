@@ -15,6 +15,8 @@ import {
 } from "@/lib/inline-create";
 
 export type NazoPayload = {
+  /** Set when creating a nazo whose image was uploaded under a server-reserved id. */
+  _id?: string;
   originalTitle: string;
   translatedTitle: string;
   description: string;
@@ -298,10 +300,15 @@ export function NazoForm({ title, initialData, onSubmit, onCancel }: NazoFormPro
     setError(null);
     try {
       let imageUrl = values.imageUrl;
+      let newNazoId: string | undefined;
+      const existingId = initialData?._id ? String(initialData._id) : undefined;
       if (useFileUpload && file) {
-        imageUrl = await uploadImage(file);
+        const uploaded = await uploadImage(file, existingId);
+        imageUrl = uploaded.url;
+        if (!existingId) newNazoId = uploaded.nazoId;
       }
       await onSubmit({
+        ...(newNazoId ? { _id: newNazoId } : {}),
         originalTitle: values.originalTitle,
         translatedTitle: values.translatedTitle,
         description: values.description,

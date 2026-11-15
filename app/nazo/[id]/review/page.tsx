@@ -1,103 +1,141 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import Image from "next/image";
 import { useRouter, useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { ChevronLeft, Globe, Lock, Loader2, Calendar } from "lucide-react";
+import { Calendar, Clock, Globe, Loader2, Lock, Users, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { StarInput } from "@/components/ui/stars";
+import { FormPageShell } from "@/components/layout/form-page-shell";
+import { useToast } from "@/components/ui/toast";
+import { goBackOr } from "@/lib/form-routes";
+import { staleNazos } from "@/lib/stale-marks";
+import { localDateKey, LIMITS, type PlayStatus } from "@/lib/play-log";
+import { cn } from "@/lib/utils";
 import { INazo } from "@/models/nazo";
-import Image from "next/image";
 
-export default function NazoReviewPage() {
+const FORM_ID = "play-log-form";
+
+interface Draft {
+  status: PlayStatus;
+  playedAt: string;
+  durationMinutes: number | null;
+  companions: string;
+  rate: number | null;
+  review: string;
+  hasSpoiler: boolean;
+  memo: string;
+}
+
+/** The play log form ("플레이 기록"): one page for status, play details, rating, review and memo. */
+export default function PlayLogPage() {
   const router = useRouter();
-  const { id } = useParams();
-  const { data: session } = useSession();
+  const { id } = useParams<{ id: string }>();
+  const { status: authStatus } = useSession();
+  const toast = useToast();
+
   const [nazo, setNazo] = useState<INazo | null>(null);
-  const [review, setReview] = useState("");
-  const [memo, setMemo] = useState("");
-  const [playedAt, setPlayedAt] = useState("");
+  const [draft, setDraft] = useState<Draft>({
+    status: "played",
+    playedAt: localDateKey(new Date()),
+    durationMinutes: null,
+    companions: "",
+    rate: null,
+    review: "",
+    hasSpoiler: false,
+    memo: "",
+  });
+  const [hasLog, setHasLog] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [isRemoving, setIsRemoving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const set = <K extends keyof Draft>(key: K, value: Draft[K]) => setDraft((d) => ({ ...d, [key]: value }));
+  const leave = () => goBackOr(router, `/nazo/${id}`);
 
   useEffect(() => {
-    async function fetchData() {
-      if (!id || !session?.user) return;
+    if (authStatus === "unauthenticated") router.replace(`/nazo/${id}`);
+  }, [authStatus, id, router]);
+
+  useEffect(() => {
+    if (!id || authStatus !== "authenticated") return;
+    (async () => {
       try {
-        const [nazoRes, reviewRes] = await Promise.all([
-          fetch(`/api/nazo/${id}`),
-          fetch(`/api/review/nazo/${id}`)
-        ]);
-
-        if (nazoRes.ok) {
-          const nazoData = await nazoRes.json();
-          setNazo(nazoData);
-        }
-
-        if (reviewRes.ok) {
-          const reviewData = await reviewRes.json();
-          if (reviewData) {
-            setReview(reviewData.review || "");
-            setMemo(reviewData.memo || "");
-            if (reviewData.playedAt) {
-              setPlayedAt(new Date(reviewData.playedAt).toISOString().split('T')[0]);
-            }
+        const [nazoRes, logRes] = await Promise.all([fetch(`/api/nazo/${id}`), fetch(`/api/log/nazo/${id}`)]);
+        if (nazoRes.ok) setNazo(await nazoRes.json());
+        if (logRes.ok) {
+          const log = await logRes.json();
+          if (log) {
+            setHasLog(true);
+            setDraft({
+              status: log.status,
+              playedAt: log.playedAt ?? (log.status === "unplayed" ? localDateKey(new Date()) : ""),
+              durationMinutes: log.durationMinutes,
+              companions: log.companions,
+              rate: log.rate,
+              review: log.review,
+              hasSpoiler: log.hasSpoiler,
+              memo: log.memo,
+            });
           }
         }
-      } catch (error) {
-        console.error("Failed to fetch data", error);
+      } catch (e) {
+        console.error("Failed to load play log", e);
       } finally {
         setIsLoading(false);
       }
-    }
-    fetchData();
-  }, [id, session]);
+    })();
+  }, [id, authStatus]);
 
-  const handleSave = async () => {
-    if (!id) return;
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsSaving(true);
+    setError(null);
     try {
-      const res = await fetch(`/api/review/nazo/${id}`, {
-        method: "POST",
+      const res = await fetch(`/api/log/nazo/${id}`, {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ review, memo, playedAt: playedAt ? new Date(playedAt) : null }),
+        body: JSON.stringify({ ...draft, playedAt: draft.playedAt || null }),
       });
-
-      if (!res.ok) throw new Error("Failed to save review");
-
-      router.refresh();
-      router.back();
-    } catch (error) {
-      console.error("Failed to save review:", error);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setError(body.error || "저장하지 못했어요. 잠시 후 다시 시도해 주세요.");
+        return;
+      }
+      staleNazos.mark(id);
+      toast(draft.status === "played" ? "플레이 기록을 저장했어요" : "쌓아둔 나조에 담았어요");
+      leave();
+    } catch {
+      setError("저장하지 못했어요. 네트워크 연결을 확인해 주세요.");
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleRemove = async () => {
-    if (!id) return;
-    setIsRemoving(true);
+  const handleDelete = async () => {
+    setIsDeleting(true);
     try {
-      const res = await fetch(`/api/review/nazo/${id}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) throw new Error("Failed to delete review");
-
-      router.refresh();
-      router.back();
-    } catch (error) {
-      console.error("Failed to remove review:", error);
+      const res = await fetch(`/api/log/nazo/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error();
+      staleNazos.mark(id);
+      toast("기록을 삭제했어요");
+      leave();
+    } catch {
+      setError("삭제하지 못했어요. 잠시 후 다시 시도해 주세요.");
+      setConfirmDelete(false);
     } finally {
-      setIsRemoving(false);
+      setIsDeleting(false);
     }
   };
 
-  if (isLoading) {
+  if (isLoading || authStatus !== "authenticated") {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
+      <div className="flex items-center justify-center min-h-full bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
@@ -105,124 +143,220 @@ export default function NazoReviewPage() {
 
   if (!nazo) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-background gap-4">
+      <div className="flex flex-col items-center justify-center min-h-full bg-background gap-4">
         <p className="text-muted-foreground">나조를 찾을 수 없습니다.</p>
-        <Button variant="outline" onClick={() => router.back()}>
-          돌아가기
-        </Button>
+        <Button variant="outline" onClick={() => router.back()}>돌아가기</Button>
       </div>
     );
   }
 
+  const played = draft.status === "played";
+
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8 pb-10 flex flex-col max-w-2xl mx-auto relative">
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 h-14 bg-background border-b z-50 flex items-center justify-between px-4">
-        <Button
-          variant="ghost"
-          className="text-base font-medium px-0 hover:bg-transparent text-foreground"
-          onClick={() => router.back()}
-        >
-          취소
-        </Button>
-        <span className="text-base font-bold">리뷰 작성</span>
-        <Button
-          variant="ghost"
-          className="text-base font-medium px-0 hover:bg-transparent text-primary"
-          onClick={handleSave}
-          disabled={isSaving}
-        >
-          {isSaving ? "저장 중..." : "확인"}
-        </Button>
-      </div>
-
-      {/* Spacer for fixed header */}
-      <div className="h-14" />
-
-      {/* Brief Nazo Info */}
-      <div className="flex gap-4 p-4 border rounded-lg bg-card text-card-foreground shadow-sm mb-8 mt-4">
-        <div className="relative shrink-0 w-16 h-16 bg-muted rounded-md overflow-hidden">
-          <Image
-            src={nazo.imageUrl || `/api/image/${nazo._id}`}
-            alt={nazo.originalTitle}
-            fill
-            className="object-cover"
-          />
-        </div>
-        <div className="flex-1 min-w-0 flex flex-col justify-center">
-          <h3 className="font-semibold text-base truncate">{nazo.originalTitle}</h3>
-          <p className="text-sm text-muted-foreground truncate">{nazo.translatedTitle}</p>
-        </div>
-      </div>
-
-      {/* Played Date Section */}
-      <div className="space-y-3 mb-8">
-        <div className="flex items-center gap-2 text-base font-medium text-foreground">
-          <Calendar className="h-5 w-5 text-green-500" />
-          <span>플레이 날짜</span>
-        </div>
-        <div className="relative max-w-[200px]">
-          <Input
-            type="date"
-            value={playedAt}
-            onChange={(e) => setPlayedAt(e.target.value)}
-            className="w-full pr-10 cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-          />
-          <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-        </div>
-      </div>
-
-
-      {/* Form Fields */}
-      <div className="space-y-8 flex-1 pb-10">
-        {/* Public Review Section */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 text-base font-medium text-foreground">
-            <Globe className="h-5 w-5 text-blue-500" />
-            <span>공개 리뷰</span>
+    <FormPageShell title="플레이 기록" formId={FORM_ID} onCancel={leave} isSaving={isSaving} error={error}>
+      <form id={FORM_ID} onSubmit={handleSave} className="flex flex-col gap-7">
+        {/* Nazo */}
+        <div className="flex gap-3 items-center">
+          <div className="relative shrink-0 w-12 aspect-[2/3] bg-muted rounded-md overflow-hidden">
+            <Image src={nazo.imageUrl || `/api/image/${nazo._id}`} alt="" fill sizes="48px" className="object-cover" />
           </div>
-          <div className="bg-blue-50/50 p-3 rounded-md text-sm text-blue-600 border border-blue-100">
-            ⚠️ <strong>스포일러 금지:</strong> 다른 사람에게 보여지는 리뷰이니 퍼즐에 대한 답이나 힌트를 포함하지 마세요.
+          <div className="min-w-0">
+            <h2 className="font-bold leading-snug line-clamp-2">{nazo.originalTitle}</h2>
+            {nazo.translatedTitle && <p className="text-sm text-muted-foreground truncate">{nazo.translatedTitle}</p>}
           </div>
-          <Textarea
-            placeholder="리뷰를 작성해주세요... (공개)"
-            value={review}
-            onChange={(e) => setReview(e.target.value)}
-            className="min-h-[150px] resize-y text-base p-4"
-          />
         </div>
 
-        {/* Private Memo Section */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 text-base font-medium text-foreground">
-            <Lock className="h-5 w-5 text-amber-500" />
-            <span>개인 메모</span>
+        {/* Status */}
+        <Field label="상태">
+          <div className="grid grid-cols-2 gap-1 rounded-xl bg-secondary p-1" role="radiogroup" aria-label="상태">
+            {([
+              ["played", "플레이했어요"],
+              ["unplayed", "아직 안 했어요"],
+            ] as const).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                role="radio"
+                aria-checked={draft.status === value}
+                onClick={() => set("status", value)}
+                className={cn(
+                  "h-10 rounded-lg text-sm font-semibold transition-colors",
+                  draft.status === value ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+                )}
+              >
+                {label}
+              </button>
+            ))}
           </div>
-          <div className="bg-amber-50/50 p-3 rounded-md text-sm text-amber-600 border border-amber-100">
-            🔒 <strong>비공개 메모:</strong> 이 메모는 다른 사람들에게 보여지지 않습니다. 이 나조에 대해서 기억하고 싶은 포인트를 자유롭게 적어보세요.
-          </div>
-          <Textarea
-            placeholder="개인 메모를 작성해주세요... (비공개)"
-            value={memo}
-            onChange={(e) => setMemo(e.target.value)}
-            className="min-h-[100px] resize-y text-base p-4"
-          />
-        </div>
+          {!played && (
+            <p className="text-sm text-muted-foreground">
+              사 두거나 해보고 싶은 나조를 <b className="text-foreground">쌓아둔 나조</b>에 담아둘게요. 플레이하고 나면 여기서 바꿔주세요.
+            </p>
+          )}
+        </Field>
 
-        {/* Delete Action - Moved to content flow */}
-        {(review || memo) && (
-          <div className="pt-4 border-t">
-            <Button
-              variant="outline"
-              className="w-full text-red-500 hover:text-red-600 hover:bg-red-50 border-red-200"
-              onClick={handleRemove}
-              disabled={isSaving || isRemoving}
-            >
-              {isRemoving ? "삭제 중..." : "리뷰 및 메모 삭제"}
-            </Button>
-          </div>
+        {played && (
+          <>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="플레이한 날" icon={Calendar} htmlFor="playedAt">
+                <Input
+                  id="playedAt"
+                  type="date"
+                  value={draft.playedAt}
+                  max={localDateKey(new Date())}
+                  onChange={(e) => set("playedAt", e.target.value)}
+                  className="h-11"
+                />
+              </Field>
+              <Field label="함께한 사람" icon={Users} htmlFor="companions">
+                <Input
+                  id="companions"
+                  value={draft.companions}
+                  placeholder="혼자, 친구 2명…"
+                  maxLength={50}
+                  onChange={(e) => set("companions", e.target.value)}
+                  className="h-11"
+                />
+              </Field>
+            </div>
+
+            <Field label="걸린 시간" icon={Clock}>
+              <DurationInput value={draft.durationMinutes} onChange={(v) => set("durationMinutes", v)} />
+            </Field>
+
+            <Field label="별점">
+              <StarInput value={draft.rate} onChange={(v) => set("rate", v)} />
+            </Field>
+
+            <Field label="공개 리뷰" icon={Globe} htmlFor="review">
+              <Textarea
+                id="review"
+                value={draft.review}
+                placeholder="어땠나요? 정답이나 힌트는 아래 비공개 메모에 적어주세요."
+                onChange={(e) => set("review", e.target.value)}
+                className="min-h-[120px] text-base p-3"
+              />
+              <label className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
+                <span>스포일러가 있어요 · 다른 사람에게는 가려서 보여줘요</span>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={draft.hasSpoiler}
+                  aria-label="스포일러 포함"
+                  onClick={() => set("hasSpoiler", !draft.hasSpoiler)}
+                  className={cn(
+                    "relative h-[26px] w-11 shrink-0 rounded-full transition-colors",
+                    draft.hasSpoiler ? "bg-stamp" : "bg-border"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "absolute top-[3px] left-[3px] h-5 w-5 rounded-full bg-white shadow transition-transform",
+                      draft.hasSpoiler && "translate-x-[18px]"
+                    )}
+                  />
+                </button>
+              </label>
+            </Field>
+          </>
         )}
-      </div>
+
+        <Field label="비공개 메모 · 나만 보기" icon={Lock} htmlFor="memo">
+          <Textarea
+            id="memo"
+            value={draft.memo}
+            placeholder={played ? "풀이 과정, 정답, 기억하고 싶은 포인트…" : "어디서 샀는지, 언제 할지…"}
+            onChange={(e) => set("memo", e.target.value)}
+            className="min-h-[90px] text-base p-3"
+          />
+        </Field>
+
+        <Button type="submit" size="lg" className="h-12 text-base" disabled={isSaving}>
+          {isSaving ? "저장 중..." : played ? "기록 저장" : "쌓아둔 나조에 담기"}
+        </Button>
+
+        {hasLog &&
+          (confirmDelete ? (
+            <div className="flex flex-col gap-3 rounded-xl border border-stamp/60 bg-stamp/5 p-4 text-sm">
+              <p>이 기록을 지울까요? 별점, 리뷰, 메모가 모두 사라지고 되돌릴 수 없어요.</p>
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" className="flex-1" onClick={() => setConfirmDelete(false)}>
+                  취소
+                </Button>
+                <Button type="button" variant="destructive" className="flex-1" onClick={handleDelete} disabled={isDeleting}>
+                  {isDeleting ? "삭제 중..." : "삭제"}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <Button type="button" variant="ghost" className="text-stamp hover:text-stamp" onClick={() => setConfirmDelete(true)}>
+              <Trash2 /> 기록 삭제
+            </Button>
+          ))}
+      </form>
+    </FormPageShell>
+  );
+}
+
+function Field({
+  label,
+  icon: Icon,
+  htmlFor,
+  children,
+}: {
+  label: string;
+  icon?: React.ComponentType<{ className?: string }>;
+  htmlFor?: string;
+  children: React.ReactNode;
+}) {
+  const Label = htmlFor ? "label" : "span";
+  return (
+    <div className="flex flex-col gap-2 min-w-0">
+      <Label htmlFor={htmlFor} className="flex items-center gap-1.5 text-sm font-semibold text-muted-foreground">
+        {Icon && <Icon className="h-4 w-4" />}
+        {label}
+      </Label>
+      {children}
+    </div>
+  );
+}
+
+/** Hours + minutes typed directly. Both empty means "not recorded". */
+function DurationInput({ value, onChange }: { value: number | null; onChange: (v: number | null) => void }) {
+  const [hours, setHours] = useState(value ? String(Math.floor(value / 60)) : "");
+  const [minutes, setMinutes] = useState(value ? String(value % 60) : "");
+
+  const update = (h: string, m: string) => {
+    const hh = h.replace(/\D/g, "").slice(0, 3);
+    const mm = m.replace(/\D/g, "").slice(0, 2);
+    setHours(hh);
+    setMinutes(mm);
+    const total = Number(hh || 0) * 60 + Number(mm || 0);
+    onChange(hh === "" && mm === "" ? null : Math.min(total, LIMITS.durationMinutes));
+  };
+
+  return (
+    <div className="flex items-center self-start h-11 rounded-md border bg-card px-3 gap-1 text-sm focus-within:ring-[3px] focus-within:ring-ring/50">
+      <input
+        type="text"
+        inputMode="numeric"
+        aria-label="걸린 시간 (시간)"
+        placeholder="0"
+        value={hours}
+        onChange={(e) => update(e.target.value, minutes)}
+        className="w-8 min-w-0 bg-transparent text-right font-semibold tabular-nums outline-none"
+      />
+      <span className="text-muted-foreground">시간</span>
+      <input
+        type="text"
+        inputMode="numeric"
+        aria-label="걸린 시간 (분)"
+        placeholder="0"
+        value={minutes}
+        onChange={(e) => update(hours, e.target.value)}
+        className="w-7 min-w-0 bg-transparent text-right font-semibold tabular-nums outline-none ml-1"
+      />
+      <span className="text-muted-foreground">분</span>
     </div>
   );
 }

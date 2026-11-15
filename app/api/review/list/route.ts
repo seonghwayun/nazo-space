@@ -18,8 +18,9 @@ export async function GET(req: NextRequest) {
 
     await connectToDatabase();
 
-    // 1. Fetch Reviews
-    const reviews = await Review.find({ nazoId })
+    // 1. Fetch Reviews (only played logs with review text; memo-only and unplayed logs stay private)
+    const filter = { nazoId, review: { $nin: [null, ""] }, status: { $ne: "unplayed" } };
+    const reviews = await Review.find(filter)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
@@ -49,6 +50,7 @@ export async function GET(req: NextRequest) {
       return {
         _id: r._id,
         review: r.review,
+        hasSpoiler: r.hasSpoiler ?? false,
         playedAt: r.playedAt,
         createdAt: r.createdAt,
         user: user ? {
@@ -60,10 +62,10 @@ export async function GET(req: NextRequest) {
     });
 
     // 5. Check pagination
-    const totalCount = await Review.countDocuments({ nazoId });
+    const totalCount = await Review.countDocuments(filter);
     const hasMore = totalCount > skip + limit;
 
-    return NextResponse.json({ results, hasMore });
+    return NextResponse.json({ results, hasMore, totalCount });
 
   } catch (error) {
     console.error("Failed to fetch public reviews:", error);

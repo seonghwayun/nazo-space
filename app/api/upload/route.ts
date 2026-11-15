@@ -1,4 +1,5 @@
-import { randomUUID } from "crypto";
+import mongoose from "mongoose";
+import { isObjectIdHex, nazoImageKey, versionedImageUrl } from "@/lib/image-key";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { NextResponse } from "next/server";
@@ -16,8 +17,12 @@ import {
  * Issues a short-lived presigned PUT URL so the browser can upload
  * an image directly to Cloudflare R2 (admin only).
  *
- * Request:  { contentType: string, size: number }
- * Response: { uploadUrl: string, publicUrl: string }
+ * The key is `nazo/<nazoId>.<ext>` (one file per nazo, overwritten on change)
+ * and the returned URL carries `?v=<upload time>` to get past caches. A new nazo
+ * has no id yet, so one is reserved here and the client creates the nazo with it.
+ *
+ * Request:  { contentType: string, size: number, nazoId?: string }
+ * Response: { uploadUrl: string, publicUrl: string, nazoId: string }
  */
 export async function POST(request: Request): Promise<NextResponse> {
   const session = await getServerSession(authOptions);
@@ -25,7 +30,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let body: { contentType?: string; size?: number };
+  let body: { contentType?: string; size?: number; nazoId?: string };
   try {
     body = await request.json();
   } catch {
@@ -33,6 +38,10 @@ export async function POST(request: Request): Promise<NextResponse> {
   }
 
   const { contentType, size } = body;
+  if (body.nazoId !== undefined && !isObjectIdHex(body.nazoId)) {
+    return NextResponse.json({ error: "Invalid nazo id" }, { status: 400 });
+  }
+  const nazoId = body.nazoId ?? new mongoose.Types.ObjectId().toHexString();
   const ext = contentType ? ALLOWED_IMAGE_TYPES[contentType] : undefined;
   if (!contentType || !ext) {
     return NextResponse.json({ error: "Unsupported content type" }, { status: 400 });
@@ -42,7 +51,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   }
 
   try {
-    const key = `nazo/${randomUUID()}.${ext}`;
+    const key = nazoImageKey(nazoId, ext);
     const command = new PutObjectCommand({
       Bucket: getR2Bucket(),
       Key: key,
@@ -57,7 +66,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       signableHeaders: new Set(["content-type", "content-length"]),
     });
 
-    return NextResponse.json({ uploadUrl, publicUrl: getR2PublicUrl(key) });
+    return NextResponse.json({ uploadUrl, publicUrl: versionedImageUrl(getR2PublicUrl(key), Date.now()), nazoId });
   } catch (error) {
     console.error("Failed to create upload URL", error);
     return NextResponse.json({ error: "Failed to create upload URL" }, { status: 500 });
