@@ -228,16 +228,25 @@ function SearchContent() {
     scrollContainerRef.current?.scrollTo({ top: 0 });
   }, [feedKey, setFeedNazos, setFeedPage, setFeedHasMore]);
 
+  // In-flight "load more" request; aborted when a new search starts or the page unmounts,
+  // so a stale page never lands on top of newer results.
+  const moreAbortRef = React.useRef<AbortController | null>(null);
+  React.useEffect(() => () => moreAbortRef.current?.abort(), []);
+
   // Search More Fetch Logic
   const fetchMoreSearch = React.useCallback(async (type: "nazo" | "creator" | "tag", pageNum: number) => {
+    moreAbortRef.current?.abort();
+    const controller = new AbortController();
+    moreAbortRef.current = controller;
     setIsMoreLoading(true);
     try {
       const params = new URLSearchParams(filterQS);
       params.set("q", debouncedQuery);
       params.set("type", type);
       params.set("page", String(pageNum));
-      const res = await fetch(`/api/nazo/search?${params}`);
+      const res = await fetch(`/api/nazo/search?${params}`, { signal: controller.signal });
       const data = await res.json();
+      if (controller.signal.aborted) return;
 
       setResults((prev) => ({
         ...prev,
@@ -257,9 +266,13 @@ function SearchContent() {
       }));
 
     } catch (error) {
+      if (controller.signal.aborted) return;
       console.error("Failed to load more search results:", error);
     } finally {
-      setIsMoreLoading(false);
+      if (moreAbortRef.current === controller) {
+        moreAbortRef.current = null;
+        setIsMoreLoading(false);
+      }
     }
   }, [debouncedQuery, filterQS, setResults]);
 
@@ -320,15 +333,21 @@ function SearchContent() {
   const searchKey = debouncedQuery ? `${debouncedQuery}\u0000${filterQS}` : "";
 
   // Effect: Initial Search Load (Reset)
+  // A newer term or filter aborts the request for the previous one (effect cleanup below).
   React.useEffect(() => {
+    const controller = new AbortController();
     async function fetchInitialResults() {
       // Logic from useDebounce means debouncedQuery updates slightly later
       // We check if it matches last searched or if empty
       if (searchKey === lastSearchedQuery && searchKey) return;
 
+      // Pages of the previous search must not be appended to the new one.
+      moreAbortRef.current?.abort();
+
       if (!debouncedQuery) {
         setResults({ nazos: [], creators: [], tags: [] });
         setLastSearchedQuery("");
+        setIsLoading(false);
         return;
       }
 
@@ -341,8 +360,9 @@ function SearchContent() {
       try {
         const params = new URLSearchParams(filterQS);
         params.set("q", debouncedQuery);
-        const response = await fetch(`/api/nazo/search?${params}`);
+        const response = await fetch(`/api/nazo/search?${params}`, { signal: controller.signal });
         const data = await response.json();
+        if (controller.signal.aborted) return;
         setResults(data);
 
         // Initialize HasMore from the totals (fall back to "a full first page").
@@ -360,14 +380,19 @@ function SearchContent() {
         }
 
       } catch (error) {
+        if (controller.signal.aborted) return;
         console.error("Failed to search:", error);
       } finally {
-        setIsLoading(false);
-        setLastSearchedQuery(searchKey);
+        // An aborted search leaves loading state to the search that replaced it.
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+          setLastSearchedQuery(searchKey);
+        }
       }
     }
 
     fetchInitialResults();
+    return () => controller.abort();
   }, [searchKey]); // Intentionally minimal deps
 
   const isSearching = query.length > 0 && (
@@ -382,16 +407,16 @@ function SearchContent() {
   const needsBrowse = !query && browseKey !== null && browse[browseKey] === undefined;
   React.useEffect(() => {
     if (!needsBrowse || !browseKey) return;
-    let cancelled = false;
-    fetch(`/api/nazo/search?type=${activeTab}`)
+    const controller = new AbortController();
+    fetch(`/api/nazo/search?type=${activeTab}`, { signal: controller.signal })
       .then((res) => res.json())
       .then((data) => {
-        if (!cancelled) setBrowse((prev) => ({ ...prev, [browseKey]: data[browseKey] ?? [] }));
+        if (!controller.signal.aborted) setBrowse((prev) => ({ ...prev, [browseKey]: data[browseKey] ?? [] }));
       })
-      .catch((error) => console.error("Failed to load browse list:", error));
-    return () => {
-      cancelled = true;
-    };
+      .catch((error) => {
+        if (!controller.signal.aborted) console.error("Failed to load browse list:", error);
+      });
+    return () => controller.abort();
   }, [needsBrowse, browseKey, activeTab]);
 
   // Remember a term once it was actually used: Enter, or opening a result.

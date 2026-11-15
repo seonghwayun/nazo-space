@@ -67,11 +67,17 @@ export async function withNazoStats<T extends { _id: unknown }>(
   const path = "$" + field;
   const rows = await Nazo.aggregate<StatsRow>([
     { $match: { [field]: { $in: ids } } },
-    { $sort: { createdAt: -1 } },
+    { $project: { [field]: 1, imageUrl: 1, createdAt: 1 } },
     { $unwind: path },
     { $match: { [field]: { $in: ids } } },
-    { $group: { _id: path, nazoCount: { $sum: 1 }, posters: { $push: { _id: "$_id", imageUrl: "$imageUrl" } } } },
-    { $project: { nazoCount: 1, posters: { $slice: ["$posters", 3] } } },
+    {
+      $group: {
+        _id: path,
+        nazoCount: { $sum: 1 },
+        // Keep only the three newest per group instead of pushing every poster and slicing.
+        posters: { $topN: { n: 3, sortBy: { createdAt: -1 }, output: { _id: "$_id", imageUrl: "$imageUrl" } } },
+      },
+    },
   ]);
   const byId = new Map(rows.map((r) => [String(r._id), r]));
   return docs.map((d) => {
