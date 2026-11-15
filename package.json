@@ -9,7 +9,8 @@
     "lint": "eslint",
     "migrate:images": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/migrate-blob-to-r2.mjs",
     "test": "node --test \"lib/**/*.test.ts\"",
-    "move:images": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/move-images-under-nazo-id.mjs"
+    "move:images": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/move-images-under-nazo-id.mjs",
+    "import:mfy": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/import-mfy.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1169.0",
