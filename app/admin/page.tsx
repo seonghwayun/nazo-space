@@ -9,14 +9,12 @@ import { Loader2, ShieldAlert } from "lucide-react";
 import { Plus, User, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { CreatorFormModal } from "@/components/admin/creator-form-modal";
 import { TagFormModal } from "@/components/admin/tag-form-modal";
 
 export default function AdminPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [isRedirecting, setIsRedirecting] = useState(false);
-  const [isCreateCreatorModalOpen, setIsCreateCreatorModalOpen] = useState(false);
   const [isCreateTagModalOpen, setIsCreateTagModalOpen] = useState(false);
 
   useEffect(() => {
@@ -30,19 +28,6 @@ export default function AdminPage() {
       return () => clearTimeout(timer);
     }
   }, [session, status, router]);
-
-  const handleCreateCreator = async (data: any) => {
-    const res = await fetch("/api/creator", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-
-    if (!res.ok) {
-      throw new Error("Failed to create creator");
-    }
-    // Just close modal for now, maybe add toast later
-  };
 
   const handleCreateTag = async (data: any) => {
     const res = await fetch("/api/tag", {
@@ -83,8 +68,10 @@ export default function AdminPage() {
                   <Plus className="mr-2 h-5 w-5" /> Create New Nazo
                 </Link>
               </Button>
-              <Button onClick={() => setIsCreateCreatorModalOpen(true)} variant="outline" className="w-full justify-start h-12 text-lg">
-                <User className="mr-2 h-5 w-5" /> Create New Creator
+              <Button asChild variant="outline" className="w-full justify-start h-12 text-lg">
+                <Link href="/admin/creator/new">
+                  <User className="mr-2 h-5 w-5" /> Create New Creator
+                </Link>
               </Button>
               <Button onClick={() => setIsCreateTagModalOpen(true)} variant="outline" className="w-full justify-start h-12 text-lg">
                 <Tag className="mr-2 h-5 w-5" /> Create New Tag
@@ -93,13 +80,6 @@ export default function AdminPage() {
 
             {/* Admin features will go here */}
           </div>
-
-          <CreatorFormModal
-            isOpen={isCreateCreatorModalOpen}
-            onClose={() => setIsCreateCreatorModalOpen(false)}
-            onSubmit={handleCreateCreator}
-            title="Create New Creator"
-          />
 
           <TagFormModal
             isOpen={isCreateTagModalOpen}
