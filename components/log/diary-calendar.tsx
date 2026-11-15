@@ -17,10 +17,13 @@ export function DiaryCalendar({ logs, showList = true }: { logs: PlayLogSummary[
   const thisMonth = todayKey.slice(0, 7);
   const [monthKey, setMonthKey] = useState(thisMonth);
 
-  const byDay = useMemo(() => groupByDay(logs, monthKey), [logs, monthKey]);
+  // Only logs with a play date go on the calendar; without one, dayKey falls back to
+  // the day the record was made, which is not when the user played it.
+  const datedLogs = useMemo(() => logs.filter((l) => l.playedAt), [logs]);
+  const byDay = useMemo(() => groupByDay(datedLogs, monthKey), [datedLogs, monthKey]);
   const monthLogs = useMemo(
-    () => logs.filter((l) => l.status === "played" && l.dayKey.startsWith(monthKey)),
-    [logs, monthKey]
+    () => datedLogs.filter((l) => l.status === "played" && l.dayKey.startsWith(monthKey)),
+    [datedLogs, monthKey]
   );
   const [y, m] = monthKey.split("-").map(Number);
 
