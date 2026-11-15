@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { NazoForm, type NazoPayload } from "@/components/admin/nazo-form";
 import { useAdminGuard } from "@/hooks/use-admin-guard";
 import { goBackOr } from "@/lib/form-routes";
+import { staleNazos } from "@/lib/stale-marks";
 
 export default function EditNazoPage() {
   const router = useRouter();
@@ -62,7 +63,8 @@ export default function EditNazoPage() {
       body: JSON.stringify(payload),
     });
     if (!res.ok) throw new Error("나조 수정에 실패했습니다.");
-    router.refresh();
+    // Back navigation restores the cached detail page; make it refetch once.
+    staleNazos.mark(id);
     goBackOr(router, `/nazo/${id}`);
   };
 

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormPageShell } from "@/components/layout/form-page-shell";
 import { uploadImage } from "@/lib/upload-image";
+import { imageSelectionError } from "@/lib/nazo-validation";
 import {
   type NamedEntity,
   shouldOfferCreate,
@@ -46,6 +47,8 @@ interface NazoFormProps {
 }
 
 const FORM_ID = "nazo-form";
+const CREATOR_MIN_QUERY = 2;
+const TAG_MIN_QUERY = 1;
 
 function toValues(initialData?: NazoFormProps["initialData"]): NazoFormValues {
   return {
@@ -60,36 +63,62 @@ function toValues(initialData?: NazoFormProps["initialData"]): NazoFormValues {
   };
 }
 
-/** Debounced search against an endpoint returning `{ results: NamedEntity[] }`. */
+/**
+ * Debounced search against an endpoint returning `{ results: NamedEntity[] }`.
+ * `resultsFor` is the query the current `results` belong to; responses for
+ * queries the user has already moved past are dropped.
+ */
 function useEntitySearch(endpoint: string, query: string, minLength: number) {
   const [results, setResults] = useState<NamedEntity[]>([]);
+  const [resultsFor, setResultsFor] = useState("");
   const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     const q = query.trim();
     if (q.length < minLength) {
       setResults([]);
+      setResultsFor(q);
       setIsSearching(false);
       return;
     }
+    let cancelled = false;
+    const controller = new AbortController();
     setIsSearching(true);
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch(`${endpoint}?q=${encodeURIComponent(q)}`);
-        if (res.ok) {
-          const data = await res.json();
-          setResults(data.results || []);
-        }
+        const res = await fetch(`${endpoint}?q=${encodeURIComponent(q)}`, {
+          signal: controller.signal,
+        });
+        if (!res.ok) throw new Error(`Search failed: ${res.status}`);
+        const data = await res.json();
+        if (cancelled) return;
+        setResults(data.results || []);
+        setResultsFor(q);
       } catch (error) {
+        if (cancelled) return;
         console.error(`Failed to search ${endpoint}`, error);
+        setResults([]);
+        setResultsFor(""); // unknown state: never offer create on a failed search
       } finally {
-        setIsSearching(false);
+        if (!cancelled) setIsSearching(false);
       }
     }, 300);
-    return () => clearTimeout(timer);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+      controller.abort();
+    };
   }, [endpoint, query, minLength]);
 
-  return { results, isSearching, clear: () => setResults([]) };
+  return {
+    results,
+    resultsFor,
+    isSearching,
+    clear: () => {
+      setResults([]);
+      setResultsFor("");
+    },
+  };
 }
 
 interface EntityPickerProps {
@@ -99,6 +128,8 @@ interface EntityPickerProps {
   query: string;
   onQueryChange: (q: string) => void;
   results: NamedEntity[];
+  resultsFor: string;
+  minLength: number;
   isSearching: boolean;
   isCreating: boolean;
   onAdd: (entity: NamedEntity) => void;
@@ -113,13 +144,15 @@ function EntityPicker({
   query,
   onQueryChange,
   results,
+  resultsFor,
+  minLength,
   isSearching,
   isCreating,
   onAdd,
   onRemove,
   onCreate,
 }: EntityPickerProps) {
-  const offerCreate = !isSearching && shouldOfferCreate(query, results);
+  const offerCreate = !isSearching && shouldOfferCreate(query, results, { minLength, resultsFor });
   const showDropdown = results.length > 0 || offerCreate || isCreating;
 
   return (
@@ -196,8 +229,8 @@ export function NazoForm({ title, initialData, onSubmit, onCancel }: NazoFormPro
   const [tagQuery, setTagQuery] = useState("");
   const [creatingCreator, setCreatingCreator] = useState(false);
   const [creatingTag, setCreatingTag] = useState(false);
-  const creatorSearch = useEntitySearch("/api/creator/search", creatorQuery, 2);
-  const tagSearch = useEntitySearch("/api/tag", tagQuery, 1);
+  const creatorSearch = useEntitySearch("/api/creator/search", creatorQuery, CREATOR_MIN_QUERY);
+  const tagSearch = useEntitySearch("/api/tag", tagQuery, TAG_MIN_QUERY);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -222,13 +255,16 @@ export function NazoForm({ title, initialData, onSubmit, onCancel }: NazoFormPro
     tagSearch.clear();
   };
 
+  // FormPageShell scrolls the error into view whenever it changes.
+  const showError = (message: string) => setError(message);
+
   const handleCreateCreator = async (name: string) => {
     setCreatingCreator(true);
     setError(null);
     try {
       addCreator(await createCreatorByName(name));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "제작자 추가에 실패했습니다.");
+      showError(err instanceof Error ? err.message : "제작자 추가에 실패했습니다.");
     } finally {
       setCreatingCreator(false);
     }
@@ -240,7 +276,7 @@ export function NazoForm({ title, initialData, onSubmit, onCancel }: NazoFormPro
     try {
       addTag(await createTagByName(name));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "태그 추가에 실패했습니다.");
+      showError(err instanceof Error ? err.message : "태그 추가에 실패했습니다.");
     } finally {
       setCreatingTag(false);
     }
@@ -249,6 +285,15 @@ export function NazoForm({ title, initialData, onSubmit, onCancel }: NazoFormPro
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSaving) return;
+    const imageError = imageSelectionError({
+      useFileUpload,
+      hasFile: Boolean(file),
+      imageUrl: values.imageUrl,
+    });
+    if (imageError) {
+      showError(imageError);
+      return;
+    }
     setIsSaving(true);
     setError(null);
     try {
@@ -268,9 +313,8 @@ export function NazoForm({ title, initialData, onSubmit, onCancel }: NazoFormPro
       });
     } catch (err) {
       console.error("Submit failed", err);
-      setError(err instanceof Error ? err.message : "저장에 실패했습니다.");
+      showError(err instanceof Error ? err.message : "저장에 실패했습니다.");
       setIsSaving(false);
-      window.scrollTo({ top: 0, behavior: "smooth" });
     }
     // On success the page navigates away; keep `isSaving` to block double submits.
   };
@@ -312,6 +356,8 @@ export function NazoForm({ title, initialData, onSubmit, onCancel }: NazoFormPro
           query={creatorQuery}
           onQueryChange={setCreatorQuery}
           results={creatorSearch.results}
+          resultsFor={creatorSearch.resultsFor}
+          minLength={CREATOR_MIN_QUERY}
           isSearching={creatorSearch.isSearching}
           isCreating={creatingCreator}
           onAdd={addCreator}
@@ -328,6 +374,8 @@ export function NazoForm({ title, initialData, onSubmit, onCancel }: NazoFormPro
           query={tagQuery}
           onQueryChange={setTagQuery}
           results={tagSearch.results}
+          resultsFor={tagSearch.resultsFor}
+          minLength={TAG_MIN_QUERY}
           isSearching={tagSearch.isSearching}
           isCreating={creatingTag}
           onAdd={addTag}

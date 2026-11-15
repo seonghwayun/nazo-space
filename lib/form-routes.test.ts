@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { isFullScreenFormRoute, goBackOr } from "./form-routes.ts";
+import { isFullScreenFormRoute, goBackOr, createNavigationTracker } from "./form-routes.ts";
 
 test("isFullScreenFormRoute matches every form route", () => {
   for (const path of [
@@ -36,16 +36,31 @@ function fakeRouter() {
   };
 }
 
-test("goBackOr goes back when there is history", () => {
+test("goBackOr goes back when there is in-app history", () => {
   const { calls, router } = fakeRouter();
-  goBackOr(router, "/admin", 3);
+  goBackOr(router, "/admin", true);
   assert.equal(calls.back, 1);
   assert.deepEqual(calls.replace, []);
 });
 
-test("goBackOr replaces with the fallback when there is no history", () => {
+test("goBackOr replaces with the fallback when there is no in-app history", () => {
   const { calls, router } = fakeRouter();
-  goBackOr(router, "/admin", 1);
+  goBackOr(router, "/admin", false);
   assert.equal(calls.back, 0);
   assert.deepEqual(calls.replace, ["/admin"]);
+});
+
+test("navigation tracker has no in-app history on the landing page", () => {
+  const tracker = createNavigationTracker();
+  tracker.onPathname("/nazo/abc/edit");
+  assert.equal(tracker.hasInAppHistory(), false);
+  tracker.onPathname("/nazo/abc/edit"); // re-render, same path
+  assert.equal(tracker.hasInAppHistory(), false);
+});
+
+test("navigation tracker records in-app history after a client navigation", () => {
+  const tracker = createNavigationTracker();
+  tracker.onPathname("/nazo/abc");
+  tracker.onPathname("/nazo/abc/edit");
+  assert.equal(tracker.hasInAppHistory(), true);
 });

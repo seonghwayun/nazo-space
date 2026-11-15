@@ -60,3 +60,13 @@ test("createCreatorByName rejects when unauthorized", async () => {
   const { impl } = fakeFetch([{ status: 401, body: { error: "Unauthorized" } }]);
   await assert.rejects(createCreatorByName("SCRAP", impl));
 });
+
+test("shouldOfferCreate is false while the query is shorter than the search minimum", () => {
+  assert.equal(shouldOfferCreate("Q", [], { minLength: 2, resultsFor: "Q" }), false);
+  assert.equal(shouldOfferCreate("Qu", [], { minLength: 2, resultsFor: "Qu" }), true);
+});
+
+test("shouldOfferCreate is false when the results belong to a different query", () => {
+  assert.equal(shouldOfferCreate("Riddle", [{ name: "Ring" }], { resultsFor: "Ri" }), false);
+  assert.equal(shouldOfferCreate("Riddle ", [{ name: "Ring" }], { resultsFor: "Riddle" }), true);
+});

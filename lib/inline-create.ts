@@ -6,10 +6,21 @@ function normalize(name: string): string {
   return name.trim().toLowerCase();
 }
 
-/** Offer "'<query>' 새로 만들기" only when no result has exactly that name. */
-export function shouldOfferCreate(query: string, results: { name: string }[]): boolean {
+/**
+ * Offer "'<query>' 새로 만들기" only when no result has exactly that name.
+ * - `minLength`: the search runs only from this many characters; below it nothing was checked.
+ * - `resultsFor`: the query the `results` were fetched for; stale results never justify a create.
+ */
+export function shouldOfferCreate(
+  query: string,
+  results: { name: string }[],
+  options: { minLength?: number; resultsFor?: string } = {}
+): boolean {
+  const trimmed = query.trim();
   const q = normalize(query);
   if (!q) return false;
+  if (options.minLength !== undefined && trimmed.length < options.minLength) return false;
+  if (options.resultsFor !== undefined && options.resultsFor.trim() !== trimmed) return false;
   return !results.some((r) => normalize(r.name) === q);
 }
 

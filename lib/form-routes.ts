@@ -13,15 +13,34 @@ export function isFullScreenFormRoute(pathname: string | null): boolean {
 }
 
 /**
- * Go back if there is in-app history, otherwise replace with `fallback`
- * (e.g. when an edit URL was opened directly in a new tab).
+ * Tracks whether the user has navigated inside the app in this tab.
+ * `window.history.length` can't tell: it also counts other sites' pages.
+ */
+export function createNavigationTracker() {
+  let firstPathname: string | null = null;
+  let navigated = false;
+  return {
+    onPathname(pathname: string) {
+      if (firstPathname === null) firstPathname = pathname;
+      else if (pathname !== firstPathname) navigated = true;
+    },
+    hasInAppHistory: () => navigated,
+  };
+}
+
+/** App-wide tracker, fed by <NavigationTracker /> in the root layout. */
+export const navigationTracker = createNavigationTracker();
+
+/**
+ * Go back if the user got here by navigating inside the app,
+ * otherwise replace with `fallback` (e.g. an edit URL opened directly).
  */
 export function goBackOr(
   router: { back(): void; replace(href: string): void },
   fallback: string,
-  historyLength: number = typeof window === "undefined" ? 1 : window.history.length
+  hasInAppHistory: boolean = navigationTracker.hasInAppHistory()
 ): void {
-  if (historyLength > 1) {
+  if (hasInAppHistory) {
     router.back();
   } else {
     router.replace(fallback);

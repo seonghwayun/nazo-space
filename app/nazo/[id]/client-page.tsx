@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
+import { staleNazos } from "@/lib/stale-marks";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
@@ -64,7 +65,7 @@ export default function NazoDetailPage({ initialNazo }: ClientPageProps) {
     async function fetchNazo() {
       if (!id) return;
       // If we already have initial data matching the ID (which we should for SSR), skip fetch
-      if (initialNazo && initialNazo._id.toString() === id) {
+      if (initialNazo && initialNazo._id.toString() === id && !staleNazos.consume(String(id))) {
         setIsLoading(false);
         return;
       }

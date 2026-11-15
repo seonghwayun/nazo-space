@@ -31,8 +31,9 @@ export function EditCreatorClient({ id, name, url }: EditCreatorClientProps) {
       body: JSON.stringify(data),
     });
     if (!res.ok) throw new Error("제작자 수정에 실패했습니다.");
-    router.refresh();
-    goBackOr(router, `/creator/${id}`);
+    // The creator page is a server component; back navigation would restore its
+    // cached (old) render, so navigate to it fresh instead.
+    router.replace(`/creator/${id}`);
   };
 
   return (

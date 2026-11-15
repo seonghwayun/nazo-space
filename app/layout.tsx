@@ -3,6 +3,7 @@ import { Noto_Sans_KR, Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
 
 import { BottomNav } from "@/components/layout/bottom-nav";
+import { NavigationTracker } from "@/components/layout/navigation-tracker";
 import { Providers } from "@/components/providers";
 
 const notoSansKr = Noto_Sans_KR({
@@ -68,6 +69,7 @@ export default function RootLayout({
         className={`${notoSansKr.variable} ${notoSansJp.variable} antialiased h-[100dvh] flex flex-col bg-background text-foreground overflow-hidden font-sans`}
       >
         <Providers>
+          <NavigationTracker />
 
           <div className="flex-1 w-full overflow-y-auto">
             {children}
