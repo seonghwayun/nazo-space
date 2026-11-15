@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { upload } from "@vercel/blob/client";
+import { uploadImage } from "@/lib/upload-image";
 
 interface Creator {
   _id: string;
@@ -206,11 +206,7 @@ export function NazoFormModal({
 
       if (useFileUpload && file) {
         setIsUploading(true);
-        const newBlob = await upload(file.name, file, {
-          access: 'public',
-          handleUploadUrl: '/api/upload',
-        });
-        finalImageUrl = newBlob.url;
+        finalImageUrl = await uploadImage(file);
         setIsUploading(false);
       }
 
