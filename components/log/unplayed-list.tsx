@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import type { PlayLogSummary } from "@/hooks/use-play-logs";
 import { daysBetween, localDateKey } from "@/lib/play-log";
 import { cn } from "@/lib/utils";
+import { ROW_LIST } from "@/components/my/layout-classes";
 
 const STALE_DAYS = 90;
 
@@ -29,7 +30,7 @@ export function UnplayedList({ logs }: { logs: PlayLogSummary[] }) {
   return (
     <div className="flex flex-col gap-2">
       <p className="text-sm text-muted-foreground">사 두거나 해보고 싶은 나조예요. 오래 기다린 순서로 보여줘요.</p>
-      <ul className="flex flex-col divide-y">
+      <ul className={ROW_LIST}>
         {items.map((log) => {
           const waiting = daysBetween(localDateKey(new Date(log.createdAt)), todayKey);
           return (

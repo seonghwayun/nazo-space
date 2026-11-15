@@ -65,7 +65,8 @@ export function PlayStats({ stats }: { stats: Stats }) {
   const avgMinutes = stats.totalMinutes && stats.playedCount ? Math.round(stats.totalMinutes / stats.playedCount) : 0;
 
   return (
-    <div className="flex flex-col gap-4">
+    // Two columns of cards on a PC.
+    <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
       <Card title="별점 분포">
         {stats.ratedCount === 0 ? (
           <p className="py-4 text-center text-sm text-muted-foreground">아직 별점을 남긴 나조가 없어요.</p>

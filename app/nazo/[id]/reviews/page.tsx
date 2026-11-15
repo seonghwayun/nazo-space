@@ -87,7 +87,7 @@ export default function ReviewsPage() {
 
   return (
     <MainLayout>
-      <div className="max-w-screen-md mx-auto px-4 pb-10">
+      <div className="max-w-screen-md lg:max-w-screen-xl mx-auto px-4 pb-10">
         {/* Header */}
         <div className="sticky top-0 bg-background/95 backdrop-blur-md z-10 py-3 mb-2 flex items-center gap-2 border-b">
           <BackButton />
@@ -102,13 +102,14 @@ export default function ReviewsPage() {
         </div>
 
         {/* List */}
-        <div className="space-y-0 divide-y divide-border/40">
+        {/* Two columns of review cards on a PC. */}
+        <div className="flex flex-col divide-y divide-border/40 lg:grid lg:grid-cols-2 lg:items-start lg:gap-3 lg:divide-y-0">
           {reviews.map((review) => (
             <ReviewItem key={review._id} review={review} />
           ))}
 
           {reviews.length === 0 && !isLoading && (
-            <div className="text-center py-20 text-muted-foreground">
+            <div className="text-center py-20 text-muted-foreground lg:col-span-2">
               아직 작성된 후기가 없습니다.
             </div>
           )}

@@ -7,6 +7,7 @@ import { Stars } from "@/components/ui/stars";
 import type { PlayLogSummary } from "@/hooks/use-play-logs";
 import { formatDuration } from "@/lib/play-log";
 import { cn } from "@/lib/utils";
+import { POSTER_GRID, ROW_LIST } from "@/components/my/layout-classes";
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -79,7 +80,7 @@ export function PlayedTile({ log }: { log: PlayLogSummary }) {
           src={posterUrl(log)}
           alt=""
           fill
-          sizes="(min-width: 640px) 160px, 33vw"
+          sizes="(min-width: 1024px) 150px, (min-width: 640px) 160px, 33vw"
           className="object-cover transition-transform duration-300 group-hover:scale-105"
         />
       </span>
@@ -154,13 +155,13 @@ export function PlayedList({
             <span className="font-normal text-muted-foreground">· {g.logs.length}개</span>
           </h3>
           {layout === "grid" ? (
-            <div className="mt-2 grid grid-cols-3 gap-x-3 gap-y-4 sm:grid-cols-4">
+            <div className={cn("mt-2", POSTER_GRID)}>
               {g.logs.map((log) => (
                 <PlayedTile key={log.nazoId} log={log} />
               ))}
             </div>
           ) : (
-            <ul className="flex flex-col divide-y">
+            <ul className={ROW_LIST}>
               {g.logs.map((log) => (
                 <PlayedRow key={log.nazoId} log={log} lead={sort === "recent" ? "day" : "date"} />
               ))}

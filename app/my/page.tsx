@@ -118,7 +118,7 @@ export default function MyPage() {
 
   return (
     <MainLayout padded>
-      <div className="mx-auto flex max-w-2xl flex-col gap-5">
+      <div className="mx-auto flex max-w-2xl lg:max-w-screen-xl flex-col gap-5">
         <div className="flex items-center gap-4">
           {session.user?.image ? (
             <Image src={session.user.image} alt="" width={64} height={64} className="rounded-full" />
@@ -189,24 +189,26 @@ export default function MyPage() {
               )}
             </section>
 
-            <HubCard href="/my/stats" title="취향 분석">
-              {stats.ratedCount > 0 ? (
-                <>
-                  <p className="text-sm text-muted-foreground">
-                    평균 <span className="font-semibold text-star">★ {stats.averageRate!.toFixed(1)}</span> · 가장 많이 준 별점{" "}
-                    <span className="font-semibold text-foreground">{stats.mostGivenRate!.toFixed(1)}</span>
-                  </p>
-                  <RateHistogram stats={stats} height="h-14" showCounts={false} />
-                </>
-              ) : (
-                <p className="text-sm text-muted-foreground">별점을 남기면 별점 분포와 플레이 시간을 보여드려요.</p>
-              )}
-            </HubCard>
+            <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
+              <HubCard href="/my/stats" title="취향 분석">
+                {stats.ratedCount > 0 ? (
+                  <>
+                    <p className="text-sm text-muted-foreground">
+                      평균 <span className="font-semibold text-star">★ {stats.averageRate!.toFixed(1)}</span> · 가장 많이 준 별점{" "}
+                      <span className="font-semibold text-foreground">{stats.mostGivenRate!.toFixed(1)}</span>
+                    </p>
+                    <RateHistogram stats={stats} height="h-14" showCounts={false} />
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground">별점을 남기면 별점 분포와 플레이 시간을 보여드려요.</p>
+                )}
+              </HubCard>
 
-            <section className="flex flex-col gap-2 rounded-2xl border bg-card p-4 shadow-sm">
-              <h2 className="font-bold">플레이 캘린더</h2>
-              <DiaryCalendar logs={logs} showList={false} />
-            </section>
+              <section className="flex flex-col gap-2 rounded-2xl border bg-card p-4 shadow-sm">
+                <h2 className="font-bold">플레이 캘린더</h2>
+                <DiaryCalendar logs={logs} showList={false} />
+              </section>
+            </div>
           </>
         )}
       </div>
@@ -288,7 +290,7 @@ function HubBodySkeleton() {
 function MyHubSkeleton() {
   return (
     <MainLayout padded>
-      <div className="mx-auto flex max-w-2xl flex-col gap-5">
+      <div className="mx-auto flex max-w-2xl lg:max-w-screen-xl flex-col gap-5">
         <div className="flex items-center gap-4">
           <Skeleton className="h-16 w-16 shrink-0 rounded-full" />
           <div className="flex-1">

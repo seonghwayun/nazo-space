@@ -41,6 +41,7 @@ function MyPlayedContent() {
 
   return (
     <MySubPage
+      wide
       title={isLoading ? "플레이한 나조" : `플레이한 나조 ${playedCount}`}
       action={
         <button
