@@ -71,7 +71,10 @@ export function WadouClient() {
     <div className="max-w-screen-sm mx-auto space-y-6 pb-20">
       <div className="flex items-center gap-2">
         <BackButton className="h-12 w-12" iconClassName="h-8 w-8" />
-        <h1 className="text-xl font-bold">和同開珎</h1>
+        <div>
+          <h1 className="text-xl font-bold">가운데 한자 찾기</h1>
+          <p lang="ja" className="text-xs text-muted-foreground">和同開珎</p>
+        </div>
       </div>
 
       <p className="text-sm text-muted-foreground">

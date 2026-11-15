@@ -23,8 +23,10 @@ export default function PracticePage() {
               <Grid3x3 className="h-6 w-6 text-rose-600 dark:text-rose-400" />
             </div>
             <div className="flex-1">
-              <h3 className="font-semibold">和同開珎</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">가운데 한 글자로 네 단어 만들기</p>
+              <h3 className="font-semibold">가운데 한자 찾기</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                <span lang="ja">和同開珎</span> · 네 단어에 공통으로 들어갈 한자 한 글자
+              </p>
             </div>
             <ChevronRight className="h-5 w-5 text-muted-foreground" />
           </Link>
