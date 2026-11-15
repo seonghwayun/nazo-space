@@ -197,7 +197,7 @@ export default function PlayLogPage() {
 
         {played && (
           <>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="플레이한 날" icon={Calendar} htmlFor="playedAt">
                 <Input
                   id="playedAt"
@@ -205,7 +205,7 @@ export default function PlayLogPage() {
                   value={draft.playedAt}
                   max={localDateKey(new Date())}
                   onChange={(e) => set("playedAt", e.target.value)}
-                  className="h-11"
+                  className="h-11 w-full min-w-0 appearance-none"
                 />
               </Field>
               <Field label="함께한 사람" icon={Users} htmlFor="companions">
