@@ -189,7 +189,7 @@ export default function MyPage() {
               )}
             </section>
 
-            <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
+            <div className="flex flex-col gap-5">
               <HubCard href="/my/stats" title="취향 분석">
                 {stats.ratedCount > 0 ? (
                   <>
@@ -206,7 +206,9 @@ export default function MyPage() {
 
               <section className="flex flex-col gap-2 rounded-2xl border bg-card p-4 shadow-sm">
                 <h2 className="font-bold">플레이 캘린더</h2>
-                <DiaryCalendar logs={logs} showList={false} />
+                <div className="mx-auto w-full max-w-xl">
+                  <DiaryCalendar logs={logs} showList={false} />
+                </div>
               </section>
             </div>
           </>
@@ -276,7 +278,7 @@ function HubBodySkeleton() {
       <Skeleton className="h-[150px] rounded-2xl" />
       <section className="flex flex-col gap-2 rounded-2xl border bg-card p-4 shadow-sm">
         <h2 className="font-bold">플레이 캘린더</h2>
-        <div className="flex flex-col gap-4">
+        <div className="mx-auto flex w-full max-w-xl flex-col gap-4">
           <div className="flex h-10 items-center justify-center">
             <SkeletonText className="font-bold" barClassName="w-28" />
           </div>
