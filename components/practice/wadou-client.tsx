@@ -13,6 +13,8 @@ import { cn } from "@/lib/utils";
 type Load = { state: "loading" } | { state: "error" } | { state: "ready"; puzzle: WadouPuzzle };
 type Result = "correct" | "gave-up" | null;
 
+const SHAKE_MS = 350;
+
 export function WadouClient() {
   const [load, setLoad] = useState<Load>({ state: "loading" });
   const [input, setInput] = useState("");
@@ -33,6 +35,7 @@ export function WadouClient() {
     setHintsShown(0);
     setChoicesShown(false);
     setResult(null);
+    setShake(false);
     try {
       const res = await fetch("/api/practice/wadou", { signal: controller.signal, cache: "no-store" });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -57,7 +60,9 @@ export function WadouClient() {
       setResult("correct");
       return;
     }
+    // Cleared by a timer, not animationend: with reduced motion there is no animation.
     setShake(true);
+    window.setTimeout(() => setShake(false), SHAKE_MS);
     setInput("");
     inputRef.current?.focus();
   };
@@ -104,7 +109,6 @@ export function WadouClient() {
                     // Enter that confirms an IME conversion must not submit.
                     if (e.key === "Enter" && e.nativeEvent.isComposing) e.preventDefault();
                   }}
-                  onAnimationEnd={() => setShake(false)}
                   placeholder="한자 한 글자"
                   aria-label="답"
                   autoComplete="off"
