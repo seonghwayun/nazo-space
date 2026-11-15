@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Search, BookOpen, User } from "lucide-react";
+import { Home, Search, Puzzle, BookOpen, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isFullScreenFormRoute } from "@/lib/form-routes";
 
@@ -19,6 +19,11 @@ export function BottomNav() {
       label: "검색",
       href: "/search",
       icon: Search,
+    },
+    {
+      label: "연습",
+      href: "/practice",
+      icon: Puzzle,
     },
     {
       label: "참고",
