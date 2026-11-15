@@ -9,7 +9,7 @@ export default function MyUnplayedPage() {
   const { logs, isLoading } = usePlayLogs();
   const count = logs.filter((l) => l.status === "unplayed").length;
   return (
-    <MySubPage title={isLoading ? "쌓아둔 나조" : `쌓아둔 나조 ${count}`}>
+    <MySubPage wide title={isLoading ? "쌓아둔 나조" : `쌓아둔 나조 ${count}`}>
       {isLoading ? <RowListSkeleton /> : <UnplayedList logs={logs} />}
     </MySubPage>
   );
