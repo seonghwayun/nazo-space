@@ -38,7 +38,8 @@ export function BottomNav() {
     <nav className="shrink-0 z-50 bg-background/80 backdrop-blur-lg border-t supports-[backdrop-filter]:bg-background/60 pb-[env(safe-area-inset-bottom)]">
       <div className="flex items-center justify-around h-14 max-w-screen-md mx-auto">
         {navItems.map((item) => {
-          const isActive = pathname === item.href;
+          // Sub-pages (e.g. /reference/kana) keep their tab highlighted.
+          const isActive = item.href === "/" ? pathname === "/" : !!pathname?.startsWith(item.href);
           const Icon = item.icon;
 
           return (

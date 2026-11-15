@@ -5,10 +5,15 @@ import { INazo } from "@/models/nazo";
 import { ICreator } from "@/models/creator";
 import { ITag } from "@/models/tag";
 
+/** A creator / tag row: name plus how many nazos it has and a few posters. */
+export type WithNazoStats<T> = T & { nazoCount?: number; posters?: { _id: string; imageUrl?: string }[] };
+
 export interface SearchResults {
   nazos: INazo[];
-  creators: ICreator[];
-  tags: ITag[];
+  creators: WithNazoStats<ICreator>[];
+  tags: WithNazoStats<ITag>[];
+  /** Total matches per tab (from the first page of a search). */
+  counts?: { nazo: number; creator: number; tag: number };
 }
 
 interface SearchContextType {
@@ -25,7 +30,16 @@ interface SearchContextType {
   setFeedPage: React.Dispatch<React.SetStateAction<number>>;
   feedHasMore: boolean;
   setFeedHasMore: React.Dispatch<React.SetStateAction<boolean>>;
+  // Feed options (kept here so they survive back navigation)
+  feedSort: FeedSort;
+  setFeedSort: (sort: FeedSort) => void;
+  feedUnplayedOnly: boolean;
+  setFeedUnplayedOnly: (v: boolean) => void;
+  layout: "list" | "grid";
+  setLayout: (layout: "list" | "grid") => void;
 }
+
+export type FeedSort = "new" | "rate" | "popular";
 
 const SearchContext = createContext<SearchContextType | undefined>(undefined);
 
@@ -38,6 +52,9 @@ export function SearchProvider({ children }: { children: ReactNode }) {
   const [feedNazos, setFeedNazos] = useState<INazo[]>([]);
   const [feedPage, setFeedPage] = useState(1);
   const [feedHasMore, setFeedHasMore] = useState(true);
+  const [feedSort, setFeedSort] = useState<FeedSort>("new");
+  const [feedUnplayedOnly, setFeedUnplayedOnly] = useState(false);
+  const [layout, setLayout] = useState<"list" | "grid">("list");
 
   return (
     <SearchContext.Provider
@@ -54,6 +71,12 @@ export function SearchProvider({ children }: { children: ReactNode }) {
         setFeedPage,
         feedHasMore,
         setFeedHasMore,
+        feedSort,
+        setFeedSort,
+        feedUnplayedOnly,
+        setFeedUnplayedOnly,
+        layout,
+        setLayout,
       }}
     >
       {children}

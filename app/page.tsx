@@ -9,6 +9,9 @@ import { NazoPortraitCard } from "@/components/nazo/nazo-portrait-card";
 import { Plus, Star, PenTool, Loader2 } from "lucide-react";
 import { INazo } from "@/models/nazo";
 import { Button } from "@/components/ui/button";
+import { usePlayLogs } from "@/hooks/use-play-logs";
+import { HomeMySection } from "@/components/log/home-my-section";
+import { LAYOUT_HINTS, writeLayoutHint } from "@/lib/layout-hints";
 
 interface HomeData {
   recent: INazo[];
@@ -20,6 +23,12 @@ interface HomeData {
 export default function Home() {
   const [data, setData] = useState<HomeData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { logs, isLoading: isLogsLoading, isSignedIn, isSessionLoading, reload: reloadLogs } = usePlayLogs();
+  // The skeleton's top block follows data-nazo-signed-in on <html> (set before paint),
+  // so even the server-rendered HTML shows the right layout for this browser.
+  useEffect(() => {
+    if (!isSessionLoading) writeLayoutHint(LAYOUT_HINTS.signedIn, isSignedIn);
+  }, [isSessionLoading, isSignedIn]);
 
   // Scroll restoration key
   const SCROLL_KEY = "nazo-space-home-scroll";
@@ -180,6 +189,7 @@ export default function Home() {
     if (pullYRef.current > 70) {
       setIsRefreshing(true);
       fetchData(false);
+      reloadLogs();
     } else {
       setIsRefreshing(false);
       setPullY(0);
@@ -210,7 +220,8 @@ export default function Home() {
     </div>
   );
 
-  if (isLoading) {
+  // Hold the skeleton until the session is known too, so the top block doesn't switch layouts after it.
+  if (isLoading || isSessionLoading) {
     const sections = [
       { icon: Plus, title: "최근 추가된 나조", link: "/search" },
       { icon: Star, title: "평점이 높은 나조" },
@@ -220,9 +231,14 @@ export default function Home() {
       <MainLayout>
         <div className="h-full overflow-y-auto">
           <div className="max-w-6xl mx-auto p-4 space-y-8">
-            {/* Total Count Banner */}
-            <div className="flex justify-center py-6 mb-2">
-              <SkeletonText className="text-xl" barClassName="w-64" />
+            <div className="hidden [html[data-nazo-signed-in]_&]:flex flex-col gap-8">
+              <HomeMySection logs={logs} isLoading />
+              <div className="flex justify-start px-1">
+                <SkeletonText className="text-xl" barClassName="w-72" />
+              </div>
+            </div>
+            <div className="flex justify-center py-6 mb-2 [html[data-nazo-signed-in]_&]:hidden">
+              <SkeletonText className="text-xl" barClassName="w-72" />
             </div>
 
             {sections.map((section) => (
@@ -293,8 +309,10 @@ export default function Home() {
           {/* Sections */}
           {data && (
             <>
+              {isSignedIn && <HomeMySection logs={logs} isLoading={isLogsLoading} />}
+
               {/* Total Count Banner */}
-              <div className="flex justify-center py-6 mb-2">
+              <div className={isSignedIn ? "flex justify-start px-1" : "flex justify-center py-6 mb-2"}>
                 <div className="flex items-baseline justify-center gap-1 text-muted-foreground text-sm font-medium">
                   <span>현재 총</span>
                   <span className="text-xl font-black text-primary tracking-tight">{data.totalCount}</span>
