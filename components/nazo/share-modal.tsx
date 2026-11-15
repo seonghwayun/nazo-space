@@ -73,7 +73,7 @@ export function ShareModal({ isOpen, onClose, url, nazo }: ShareModalProps) {
       let base64Image = '';
 
       try {
-        const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(imgUrl)}`;
+        const proxyUrl = `/api/proxy-image?id=${encodeURIComponent(String(nazo._id))}`;
         const response = await fetch(proxyUrl);
         if (!response.ok) throw new Error('Proxy fetch failed');
 
