@@ -6,13 +6,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { isFullScreenFormRoute } from "@/lib/form-routes";
 
 export function Header() {
   const pathname = usePathname();
 
   // Hide header on nazo detail page but show on others
   // Check if pathname starts with /nazo/ followed by an ID
-  if ((pathname?.startsWith("/nazo/") && pathname.split("/").length > 2) || pathname?.startsWith("/creator/") || pathname?.startsWith("/tag/")) {
+  if (isFullScreenFormRoute(pathname) || (pathname?.startsWith("/nazo/") && pathname.split("/").length > 2) || pathname?.startsWith("/creator/") || pathname?.startsWith("/tag/")) {
     return null;
   }
 

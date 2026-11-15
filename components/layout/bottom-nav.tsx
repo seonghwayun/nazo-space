@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Search, BookOpen, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { isFullScreenFormRoute } from "@/lib/form-routes";
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -31,7 +32,7 @@ export function BottomNav() {
     },
   ];
 
-  if (pathname?.endsWith("/review")) return null;
+  if (isFullScreenFormRoute(pathname)) return null;
 
   return (
     <nav className="shrink-0 z-50 bg-background/80 backdrop-blur-lg border-t supports-[backdrop-filter]:bg-background/60 pb-[env(safe-area-inset-bottom)]">
