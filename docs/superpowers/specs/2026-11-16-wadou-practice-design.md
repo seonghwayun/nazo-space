@@ -79,22 +79,21 @@ A port of `WadouPuzzles.swift` and the index in `PuzzleGenerator.init`:
 - Distractors: 3 kanji. Prefer other centers that complete ≥ 2 of the words, and never use an outer kanji.
 - Layout: top, left, right, bottom. Each spoke's arrow points into the center when the outer comes
   first (`外→中`), and out of the center otherwise (`中→外`).
-- **Puzzle id:** `center` + the four outers in layout order, e.g. `間-時,空,人,期`. Given an id, the
-  generator rebuilds the same puzzle (placement included), so ids can later back share links or stats.
+- No puzzle id and no repeat avoidance. The user judged both unnecessary for now. A key from the
+  four words can be added later if share links or stats need one.
 - `rng` is injected so the tests can be deterministic.
 
 Kept in memory by `lib/practice/word-cache.ts`. It holds the loaded words and kanji at module
 level and builds the index once. It reloads after 1 hour so re-imports show up without a deploy.
 
 ## API
-`GET /api/practice/wadou?exclude=<id>,<id>…` returns one puzzle:
+`GET /api/practice/wadou` returns one puzzle:
 ```ts
-{ id, spokes: { kanji, outerFirst }[4],  // top, left, right, bottom
+{ spokes: { kanji, outerFirst }[4],  // top, left, right, bottom
   answer, choices: string[4],
   hints: [meanings joined by " · ", "on: カン・ケン / kun: あいだ・ま"],
   words: { expression, ruby, meaning }[4] }
 ```
-- `exclude` holds the client's recent ids (the last 30). The generator skips them.
 - The answer is in the response. It's practice, so cheating doesn't matter, and checking on the
   client needs no extra round trip.
 - `Cache-Control: no-store`.
@@ -123,13 +122,13 @@ level and builds the index once. It reloads after 1 hour so re-imports show up w
 ## Builder's calls (my decisions, user can override)
 - Bottom-nav placement and the name 연습.
 - Committing `data/practice-words.json` (~300 KB) so the import doesn't need the Nazopt repo.
-- 1-hour cache TTL, 50 generation tries, last-30 exclude list.
+- 1-hour cache TTL, 50 generation tries.
 - No server-side answer check.
 - An error state ("문제를 불러오지 못했어요" + retry) if the API fails.
 
 ## Testing
 - `lib/practice/wadou.test.ts` (node --test, like the other `lib` tests), using a small fixed word list:
   unique-answer rejection, distinct outers, distractors never equal outers or the answer,
-  id round-trip, arrow direction.
+  arrow direction.
 - Tests for grading normalization and for `shortMeaning` / the word filter.
 - Manual run of the page on mobile width.

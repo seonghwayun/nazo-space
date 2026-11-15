@@ -16,15 +16,14 @@
 - Word filter: `word` rows that are exactly two kanji, both with `kankenOrder` 1–6. Add two-kanji `nazoTerm` rows without the kanken filter. Same characters twice (人人) are skipped by the index. Duplicate expressions keep the first, in order JLPT 5→1, then nazoTerm.
 - Every puzzle has exactly one answer. No other center may complete all four words.
 - Response per puzzle ≈ 1 KB. The word list never leaves the server. `Cache-Control: no-store`.
-- Cache TTL 1 hour. Up to 50 generation tries per request. Exclude list: last 30 ids.
+- Cache TTL 1 hour. Up to 50 generation tries per request. No puzzle id, no repeat avoidance.
 - `lib/practice/*.ts` modules other than `word-cache.ts` are pure (no `@/` imports, relative `.ts` imports) so `node --test` can run them, as the other `lib` helpers do.
 - UI copy is Korean. Works at phone width and in dark mode using existing tokens and `components/ui/*`.
-- **Spec refinement:** the puzzle id is the four words in layout order joined by `-` (e.g. `時間-空間-人間-期間`), not `center-outers`. Outers alone can't tell 日本 from 本日. The center is the one character all four words share. Task 1 updates the spec line.
 
 ## Review Focus
 1. **DB empty (import not run yet):** the API answers 503 `{ error }` and the page shows 「문제를 불러오지 못했어요」 with a retry button. Covered in Task 4 (null-data path) and Task 5 (error state).
 2. **Enter while composing Japanese in an IME:** Enter that confirms a kana→kanji conversion must not submit. Covered in Task 5 (`isComposing` guard, manual check).
-3. **Malformed or huge `exclude` query:** empty items, items over 20 chars, or more than 30 items are dropped or truncated without an error. Covered in Task 4 test `parseExclude`.
+3. **Same kanji on two spokes** (two-way pairs like 日本/本日 around 本): never the same outer twice. Covered in Task 3 two-way fixture test.
 4. **Answer typed as a reading or with extra text** (`かん`, ` 間 `, `間違`): `かん` is wrong without crashing, and ` 間 ` / `間違` count as 間 (first-character rule). Covered in Task 3 grade tests.
 5. **Rapid 「다음 문제」 taps:** only the latest response is shown. A stale fetch is aborted, following the precedent in `916afba`. Covered in Task 5.
 
@@ -36,7 +35,6 @@
 - Create: `lib/practice/source.ts`, `lib/practice/source.test.ts`
 - Create: `scripts/build-practice-words.mjs`
 - Create: `data/practice-words.json` (generated, committed)
-- Modify: `docs/superpowers/specs/2026-11-16-wadou-practice-design.md` (puzzle id line, per Global Constraints)
 
 **Interfaces:**
 - Produces (`lib/practice/source.ts`):
@@ -86,7 +84,7 @@ test("splitReadings", () => {
   - Kanji: for every character used, `select literal, onReadings, kunReadings from kanji where literal = ?` → `KanjiReadings` via `splitReadings`.
   - Write `data/practice-words.json` (2-space indent). Print `words: N, kanji: M`.
 - [ ] **Step 6:** Run `node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/build-practice-words.mjs`. Expected: `words:` ≈ 3,200–3,400, `kanji:` ≈ 600–1,100. Spot-check with `node -e` that `時間` has meaning `시간` and ruby with two segments.
-- [ ] **Step 7:** Update the spec's puzzle-id line. Commit `lib/practice/source*.ts scripts/build-practice-words.mjs data/practice-words.json docs/...` with `feat: build practice word list from Nazopt content`.
+- [ ] **Step 7:** Commit `lib/practice/source*.ts scripts/build-practice-words.mjs data/practice-words.json` with `feat: build practice word list from Nazopt content`.
 
 ### Task 2: Mongo models and import script
 
@@ -118,22 +116,19 @@ test("splitReadings", () => {
 - Produces (`wadou.ts`):
   - `type Spoke = { kanji: string; outerFirst: boolean }`
   - `type SpokePosition = "top" | "left" | "right" | "bottom"`
-  - `type WadouPuzzle = { id: string; spokes: [Spoke, Spoke, Spoke, Spoke] /* top,left,right,bottom */; answer: string; choices: string[] /* 4, shuffled, contains answer */; hints: [string, string]; words: { expression: string; ruby: RubySegment[]; meaning: string }[] /* layout order */ }`
+  - `type WadouPuzzle = { spokes: [Spoke, Spoke, Spoke, Spoke] /* top,left,right,bottom */; answer: string; choices: string[] /* 4, shuffled, contains answer */; hints: [string, string]; words: { expression: string; ruby: RubySegment[]; meaning: string }[] /* layout order */ }`
   - `type WadouIndex` (opaque to callers: centers, spokes per center, word map, kanji map)
   - `buildWadouIndex(words: PracticeWordData[], kanji: KanjiReadings[]): WadouIndex`
-  - `generateWadou(index: WadouIndex, rng: () => number, exclude?: Set<string>): WadouPuzzle | null`
-  - `wadouFromId(index: WadouIndex, id: string, rng: () => number): WadouPuzzle | null`
+  - `generateWadou(index: WadouIndex, rng: () => number): WadouPuzzle | null`
   - `arrowFor(position: SpokePosition, outerFirst: boolean): "↓" | "↑" | "→" | "←"`. The arrow shows reading order: from outer to center when `outerFirst`, otherwise from center to outer.
 - Produces (`grade.ts`): `normalizeAnswer(input: string): string` (strip all whitespace including U+3000, return the first code point or `""`), `isCorrect(input: string, answer: string): boolean`.
 
-Index and generation follow the spec's Generator section: index `XY` under `Y` (outer X, `outerFirst: true`) and under `X` (outer Y, `false`), skipping X = Y. Centers have ≥ 4 distinct outers. Pick a random center, take shuffled spokes with distinct outers until 4, and reject the puzzle if any other center completes all 4. Distractors are up to 3 rivals that complete ≥ 2 words, then random rivals, never an outer or the answer. Retry up to 50 times, skipping ids in `exclude`, and return `null` when nothing is left. Hints: `meanings.join(" · ")` and `음독 ${on.join("・")} / 훈독 ${kun.join("・")}`, leaving out an empty side. Skip disabled words before calling `buildWadouIndex` (Task 4 does this).
+Index and generation follow the spec's Generator section: index `XY` under `Y` (outer X, `outerFirst: true`) and under `X` (outer Y, `false`), skipping X = Y. Centers have ≥ 4 distinct outers. Pick a random center, take shuffled spokes with distinct outers until 4, and reject the puzzle if any other center completes all 4. Distractors are up to 3 rivals that complete ≥ 2 words, then random rivals, never an outer or the answer. Retry up to 50 times, and return `null` if all tries fail. Hints: `meanings.join(" · ")` and `음독 ${on.join("・")} / 훈독 ${kun.join("・")}`, leaving out an empty side. Skip disabled words before calling `buildWadouIndex` (Task 4 does this).
 
 - [ ] **Step 1: Write failing tests** in `wadou.test.ts` with a fixed word list and a seeded rng (a small LCG defined in the test file):
   - Fixture A (unique): 時間 空間 人間 期間 年間 plus distractor-only words 時代 人生. A puzzle with center 間 is returned, and `answer === "間"`.
   - Fixture B (ambiguous): 時間 空間 人間 期間 + 時代 空代 人代 期代. `generateWadou` returns `null` (both 間 and 代 complete all four).
   - For 200 seeds on fixture A: 4 distinct outers; `choices.length === 4`; `choices` has no duplicates and contains `answer`; no choice equals an outer except the answer, which is never an outer; every `words[i].expression` equals `outerFirst ? outer + answer : answer + outer`.
-  - `wadouFromId(index, p.id, rng)` returns the same `spokes`, `answer`, and `words` as `p`. `wadouFromId(index, "garbage", rng) === null`. An id whose words don't share one character → `null`.
-  - Fixture C (時間 空間 人間 期間 only): with `exclude` holding all 24 layout permutations of the four words joined by `-` → `null`.
   - Two-way pair: words 日本 本日 + 本人 本気 本当 本来. A center-本 puzzle never uses outer 日 twice.
   - `arrowFor`: top/true `↓`, top/false `↑`, left/true `→`, left/false `←`, right/true `←`, right/false `→`, bottom/true `↑`, bottom/false `↓`.
   - Hints: `hints[0]` contains every word meaning joined by ` · `. `hints[1]` is `음독 カン・ケン / 훈독 あいだ・ま` for kanji `{literal:"間", on:["カン","ケン"], kun:["あいだ","ま"]}`, and `음독 カン` when `kun` is empty.
@@ -147,22 +142,18 @@ Index and generation follow the spec's Generator section: index `XY` under `Y` (
 
 **Files:**
 - Create: `lib/practice/word-cache.ts`
-- Create: `lib/practice/exclude.ts`, `lib/practice/exclude.test.ts`
 - Create: `app/api/practice/wadou/route.ts`
 
 **Interfaces:**
 - Consumes: `buildWadouIndex`, `generateWadou`, `WadouPuzzle` (Task 3). Models `PracticeWord`, `PracticeKanji` (Task 2). `connectToDatabase` from `@/lib/db`.
 - Produces:
   - `getWadouIndex(): Promise<WadouIndex | null>` in `word-cache.ts`. It returns `null` when there are no non-disabled words. It caches the index plus a load timestamp in a module variable, reloads after 1 h, and shares one in-flight promise across concurrent callers. A failed load is not cached.
-  - `parseExclude(param: string | null): Set<string>` in `exclude.ts` (pure): split on `,`, trim, drop empties and items longer than 20 chars, keep at most the last 30.
-  - `GET /api/practice/wadou?exclude=…` → `200 WadouPuzzle`. `503 { error: "no puzzles" }` when the index is null or the generator returns null. `500 { error }` on exceptions, logged like `app/api/tag/route.ts`. All responses set `Cache-Control: no-store`.
+  - `GET /api/practice/wadou` → `200 WadouPuzzle`. `503 { error: "no puzzles" }` when the index is null or the generator returns null. `500 { error }` on exceptions, logged like `app/api/tag/route.ts`. All responses set `Cache-Control: no-store`.
 
-- [ ] **Step 1: Write failing tests** for `parseExclude`: `null` → empty set; `"a,,b, c "` → `{a,b,c}`; an item of 21 chars is dropped; 40 items → the last 30.
-- [ ] **Step 2:** Run `pnpm test` → FAIL. Implement `exclude.ts` → PASS.
-- [ ] **Step 3:** Implement `word-cache.ts`. Use `.lean()` queries with `disabled: { $ne: true }` and projections limited to the `PracticeWordData` / `KanjiReadings` fields.
-- [ ] **Step 4:** Implement the route with `Math.random` as rng.
-- [ ] **Step 5:** With `pnpm dev`, `curl -s -D- 'localhost:3000/api/practice/wadou'` → 200, `cache-control: no-store`, a JSON body under 1.5 KB (`| wc -c`). A second call is fast (no DB query; check with a temporary `console.time` that you remove afterwards). Passing the first response's id in `exclude` never returns that id over 20 calls.
-- [ ] **Step 6:** `pnpm lint` passes. Commit with `feat: practice wadou API with in-memory word cache`.
+- [ ] **Step 1:** Implement `word-cache.ts`. Use `.lean()` queries with `disabled: { $ne: true }` and projections limited to the `PracticeWordData` / `KanjiReadings` fields.
+- [ ] **Step 2:** Implement the route with `Math.random` as rng.
+- [ ] **Step 3:** With `pnpm dev`, `curl -s -D- 'localhost:3000/api/practice/wadou'` → 200, `cache-control: no-store`, a JSON body under 1.5 KB (`| wc -c`). A second call is fast (no DB query; check with a temporary `console.time` that you remove afterwards).
+- [ ] **Step 4:** `pnpm lint` passes. Commit with `feat: practice wadou API with in-memory word cache`.
 
 ### Task 5: Practice pages and navigation
 
@@ -183,7 +174,7 @@ Behavior (spec "Page" section):
 - Input with `lang="ja"` and a 확인 button. In the keydown handler, return early when `e.nativeEvent.isComposing` is true. Wrong → shake the input (a CSS keyframe in `globals.css` or a Tailwind arbitrary animation), clear it, keep focus.
 - Buttons `힌트` (first shows hints[0], then hints[1], then disables), `선택지 보기` (shows the four choices as buttons; tapping one grades it), `모르겠어요` (reveals).
 - On reveal (correct or 모르겠어요): `revealed` = true. Show a result line, `정답!` or `정답은 間`. Then list the four words with `<ruby>` per segment and the meaning. Show the `다음 문제` button.
-- Fetching: keep up to 30 recent ids in component state and send them as `exclude`. Use an `AbortController`: a new fetch aborts the previous one, and an aborted fetch never sets state. Show a skeleton while loading. On a non-OK response or a network error, show `문제를 불러오지 못했어요` and a `다시 시도` button.
+- Fetching: use an `AbortController`: a new fetch aborts the previous one, and an aborted fetch never sets state. Show a skeleton while loading. On a non-OK response or a network error, show `문제를 불러오지 못했어요` and a `다시 시도` button.
 
 - [ ] **Step 1:** Add the nav item and `/practice` page.
 - [ ] **Step 2:** Build `WadouBoard`, then `WadouClient` and the page.
