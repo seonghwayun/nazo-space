@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import { MainLayout } from "@/components/layout/main-layout";
 import { NazoPortraitCardSkeleton } from "@/components/nazo/nazo-portrait-card-skeleton";
-import { Skeleton } from "@/components/ui/skeleton";
+import { SkeletonText } from "@/components/ui/skeleton";
 import { NazoPortraitCard } from "@/components/nazo/nazo-portrait-card";
 import { Plus, Star, PenTool, Loader2 } from "lucide-react";
 import { INazo } from "@/models/nazo";
@@ -211,54 +211,30 @@ export default function Home() {
   );
 
   if (isLoading) {
+    const sections = [
+      { icon: Plus, title: "최근 추가된 나조", link: "/search" },
+      { icon: Star, title: "평점이 높은 나조" },
+      { icon: PenTool, title: "최근 리뷰가 등록된 나조" },
+    ];
     return (
       <MainLayout>
         <div className="h-full overflow-y-auto">
           <div className="max-w-6xl mx-auto p-4 space-y-8">
-            {/* Recently Added Loading */}
-            <section>
-              <div className="flex items-center justify-between mb-4 px-1">
-                <div className="flex items-center gap-2">
-                  <Plus className="h-5 w-5 text-primary" />
-                  <h2 className="text-xl font-bold tracking-tight">최근 추가된 나조</h2>
-                </div>
-              </div>
-              <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <NazoPortraitCardSkeleton key={i} />
-                ))}
-              </div>
-            </section>
+            {/* Total Count Banner */}
+            <div className="flex justify-center py-6 mb-2">
+              <SkeletonText className="text-xl" barClassName="w-64" />
+            </div>
 
-            {/* Top Rated Loading */}
-            <section>
-              <div className="flex items-center justify-between mb-4 px-1">
-                <div className="flex items-center gap-2">
-                  <Star className="h-5 w-5 text-primary" />
-                  <h2 className="text-xl font-bold tracking-tight">평점이 높은 나조</h2>
+            {sections.map((section) => (
+              <section key={section.title}>
+                <SectionHeader icon={section.icon} title={section.title} link={section.link} />
+                <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <NazoPortraitCardSkeleton key={i} />
+                  ))}
                 </div>
-              </div>
-              <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <NazoPortraitCardSkeleton key={i} />
-                ))}
-              </div>
-            </section>
-
-            {/* Recently Reviewed Loading */}
-            <section>
-              <div className="flex items-center justify-between mb-4 px-1">
-                <div className="flex items-center gap-2">
-                  <PenTool className="h-5 w-5 text-primary" />
-                  <h2 className="text-xl font-bold tracking-tight">최근 리뷰가 등록된 나조</h2>
-                </div>
-              </div>
-              <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <NazoPortraitCardSkeleton key={i} />
-                ))}
-              </div>
-            </section>
+              </section>
+            ))}
           </div>
         </div>
       </MainLayout>
