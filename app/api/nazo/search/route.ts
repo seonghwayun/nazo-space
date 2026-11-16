@@ -25,7 +25,7 @@ function findNamed(kind: "creator" | "tag", filter: Record<string, unknown>, ski
  * - `q`, no `type`: first page of every tab plus `counts` (totals per tab)
  * - `q` + `type=nazo|creator|tag` + `page`: further pages of one tab
  * - no `q` + `type=creator|tag`: browse every creator / tag, most nazos first
- * Nazo matches cover the title, the translated title and the creator's name,
+ * Nazo matches cover the title and the translated title only (creators have their own tab),
  * honour `unplayedOnly` (see nazoListConditions) and are ordered by `sort` (new|rate|popular).
  * Creators and tags come with `nazoCount` and up to three `posters`.
  */
@@ -53,11 +53,8 @@ export async function GET(request: NextRequest) {
     const regex = { $regex: toKanaPattern(query), $options: "i" };
     const nameFilter = { name: regex };
 
-    const buildNazoFilter = async () => {
-      const creatorIds = await Creator.find(nameFilter).distinct("_id");
-      const base = { $or: [{ originalTitle: regex }, { translatedTitle: regex }, { creators: { $in: creatorIds } }] };
-      return andAll(base, await nazoListConditions(searchParams));
-    };
+    const buildNazoFilter = async () =>
+      andAll({ $or: [{ originalTitle: regex }, { translatedTitle: regex }] }, await nazoListConditions(searchParams));
     const findNazos = (filter: Record<string, unknown>, from: number) =>
       Nazo.find(filter)
         .sort(nazoSort(searchParams.get("sort")))
