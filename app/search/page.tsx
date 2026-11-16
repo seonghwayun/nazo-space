@@ -419,6 +419,18 @@ function SearchContent() {
     return () => controller.abort();
   }, [needsBrowse, browseKey, activeTab]);
 
+  // The ✕ in the search box: back to the feed right away instead of waiting for the debounce.
+  // Tab, sort and filters stay as they are.
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
+  const clearSearch = () => {
+    moreAbortRef.current?.abort();
+    setQuery("");
+    setResults({ nazos: [], creators: [], tags: [] });
+    replaceParam("q", null);
+    scrollContainerRef.current?.scrollTo({ top: 0 });
+    searchInputRef.current?.focus();
+  };
+
   // Remember a term once it was actually used: Enter, or opening a result.
   const rememberQuery = () => {
     if (query.trim()) remember(query);
@@ -438,16 +450,28 @@ function SearchContent() {
           <div className="relative">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
+              ref={searchInputRef}
               type="search"
               placeholder="검색어를 입력하세요..."
-              className="pl-9 w-full bg-background"
+              className="pl-9 pr-9 w-full bg-background [&::-webkit-search-cancel-button]:appearance-none"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.nativeEvent.isComposing) rememberQuery();
+                else if (e.key === "Escape" && query) clearSearch();
               }}
               enterKeyHint="search"
             />
+            {query && (
+              <button
+                type="button"
+                aria-label="검색어 지우기"
+                onClick={clearSearch}
+                className="absolute right-1 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
 
           {/* Tab Navigation */}
