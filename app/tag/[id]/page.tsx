@@ -7,6 +7,9 @@ import { NazoCard } from "@/components/nazo/nazo-card";
 import { notFound } from "next/navigation";
 
 import { Metadata } from "next";
+import { cache } from "react";
+import { isObjectIdHex } from "@/lib/image-key";
+import { listDescription, nazoDisplayTitle, shareMeta } from "@/lib/seo";
 
 interface TagPageProps {
   params: Promise<{
@@ -14,41 +17,48 @@ interface TagPageProps {
   }>;
 }
 
+// Shared by generateMetadata and the page (one query each per request).
+const getTag = cache(async (id: string) => {
+  // A malformed id would make findById throw (a 500) instead of a 404.
+  if (!isObjectIdHex(id)) return null;
+  await connectToDatabase();
+  return Tag.findById(id);
+});
+const getNazos = cache(async (id: string) =>
+  Nazo.find({ tags: id }).sort({ createdAt: -1 }).lean()
+);
+
 export async function generateMetadata({ params }: TagPageProps): Promise<Metadata> {
   const { id } = await params;
-  await connectToDatabase();
-  const tag = await Tag.findById(id);
+  const tag = await getTag(id);
+  if (!tag) notFound();
 
-  if (!tag) {
-    return {
-      title: "태그를 찾을 수 없음 | Nazo Space",
-    };
-  }
-
+  const nazos = await getNazos(id);
+  const title = `#${tag.name} - 나조토키 태그`;
+  const description = listDescription("tag", tag.name, nazos.map((n) => nazoDisplayTitle(n)));
   return {
-    title: `#${tag.name} - 태그 | Nazo Space`,
-    description: `#${tag.name} 태그가 포함된 나조 모음입니다.`,
-    openGraph: {
-      title: `#${tag.name} | Nazo Space`,
-      description: `#${tag.name} 태그가 포함된 나조 모음입니다.`,
-    },
+    title,
+    description,
+    ...shareMeta({
+      title,
+      description,
+      path: `/tag/${id}`,
+      image: nazos.find((n) => n.imageUrl)?.imageUrl,
+      poster: true,
+    }),
   };
 }
 
 export default async function TagPage({ params }: TagPageProps) {
   const { id } = await params;
-  await connectToDatabase();
-
-  const tag = await Tag.findById(id);
+  const tag = await getTag(id);
 
   if (!tag) {
     notFound();
   }
 
   // Fetch Nazos associated with this tag
-  const taggedNazos = await Nazo.find({ tags: id })
-    .sort({ createdAt: -1 }) // Newest first
-    .lean();
+  const taggedNazos = await getNazos(id);
 
   return (
     <MainLayout padded>

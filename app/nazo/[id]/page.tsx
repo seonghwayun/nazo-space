@@ -6,6 +6,8 @@ import Tag from "@/models/tag";
 import { notFound } from "next/navigation";
 import NazoDetailPage from "./client-page";
 import { Metadata } from "next";
+import { isObjectIdHex } from "@/lib/image-key";
+import { nazoDescription, nazoTitle, shareMeta } from "@/lib/seo";
 
 // Ensure models are registered
 const _ = { Creator, Tag };
@@ -17,6 +19,8 @@ interface PageProps {
 }
 
 const getNazo = cache(async (id: string) => {
+  // A malformed id would make findById throw (a 500) instead of a 404.
+  if (!isObjectIdHex(id)) return null;
   await connectToDatabase();
   return Nazo.findById(id).populate("creators").populate("tags").lean();
 });
@@ -25,29 +29,21 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { id } = await params;
   const nazo = await getNazo(id);
 
-  if (!nazo) {
-    return {
-      title: "나조를 찾을 수 없음 | Nazo Space",
-    };
-  }
+  // Throwing here (not only in the page) makes crawlers get a real 404 status:
+  // the page body streams after loading.tsx, when the status is already 200.
+  if (!nazo) notFound();
 
+  const seo = {
+    ...nazo,
+    creators: (nazo.creators ?? []) as unknown as { name: string }[],
+    tags: (nazo.tags ?? []) as unknown as { name: string }[],
+  };
+  const title = nazoTitle(seo);
+  const description = nazoDescription(seo);
   return {
-    title: `${nazo.originalTitle} | Nazo Space`,
-    description: nazo.description ? nazo.description.slice(0, 150) + "..." : "나조 상세 정보",
-    openGraph: {
-      title: `${nazo.originalTitle} | Nazo Space`,
-      description: nazo.description ? nazo.description.slice(0, 150) + "..." : "나조 상세 정보",
-      images: nazo.imageUrl ? [nazo.imageUrl] : [],
-      siteName: 'Nazo Space',
-      locale: 'ko_KR',
-      type: 'website',
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: `${nazo.originalTitle} | Nazo Space`,
-      description: nazo.description ? nazo.description.slice(0, 150) + "..." : "나조 상세 정보",
-      images: nazo.imageUrl ? [nazo.imageUrl] : [],
-    },
+    title,
+    description,
+    ...shareMeta({ title, description, path: `/nazo/${id}`, image: nazo.imageUrl, poster: true }),
   };
 }
 
@@ -79,6 +75,8 @@ export default async function Page({ params }: PageProps) {
     "@context": "https://schema.org",
     "@type": "Game",
     "name": nazo.originalTitle,
+    "alternateName": nazo.translatedTitle || undefined,
+    "url": `https://nazo.respace.cc/nazo/${id}`,
     "image": nazo.imageUrl ? [nazo.imageUrl] : [],
     "description": nazo.description,
     "aggregateRating": (nazo.rateCount || 0) > 0 ? {

@@ -19,6 +19,9 @@ export async function GET() {
       "/reference/kana",
       "/reference/keyboard",
       "/reference/prefectures",
+      "/reference/jyuunisi",
+      "/practice",
+      "/practice/wadou",
     ].map((route) => ({
       url: `${baseUrl}${route}`,
       lastModified: new Date(),

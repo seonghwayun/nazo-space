@@ -1,6 +1,14 @@
 import { MainLayout } from "@/components/layout/main-layout";
 import Link from "next/link";
+import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import { ChevronRight, Languages, Keyboard, Map, Shuffle, PawPrint } from "lucide-react";
+
+export const metadata: Metadata = pageMeta({
+  title: "나조토키 참고 자료",
+  description: "나조토키 풀이에 도움이 되는 자료 모음: 히라가나·가타카나 표, 플릭 자판, 도도부현, 12지.",
+  path: "/reference",
+});
 
 export default function ReferencePage() {
   return (

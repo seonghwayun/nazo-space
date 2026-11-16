@@ -11,6 +11,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { Metadata } from "next";
+import { cache } from "react";
+import { isObjectIdHex } from "@/lib/image-key";
+import { listDescription, nazoDisplayTitle, shareMeta } from "@/lib/seo";
 
 interface CreatorPageProps {
   params: Promise<{
@@ -18,41 +21,48 @@ interface CreatorPageProps {
   }>;
 }
 
+// Shared by generateMetadata and the page (one query each per request).
+const getCreator = cache(async (id: string) => {
+  // A malformed id would make findById throw (a 500) instead of a 404.
+  if (!isObjectIdHex(id)) return null;
+  await connectToDatabase();
+  return Creator.findById(id);
+});
+const getNazos = cache(async (id: string) =>
+  Nazo.find({ creators: id }).sort({ createdAt: -1 }).lean()
+);
+
 export async function generateMetadata({ params }: CreatorPageProps): Promise<Metadata> {
   const { id } = await params;
-  await connectToDatabase();
-  const creator = await Creator.findById(id);
+  const creator = await getCreator(id);
+  if (!creator) notFound();
 
-  if (!creator) {
-    return {
-      title: "제작자를 찾을 수 없음 | Nazo Space",
-    };
-  }
-
+  const nazos = await getNazos(id);
+  const title = `${creator.name} - 나조토키 제작자`;
+  const description = listDescription("creator", creator.name, nazos.map((n) => nazoDisplayTitle(n)));
   return {
-    title: `${creator.name} - 제작자 | Nazo Space`,
-    description: `${creator.name}님이 제작한 나조 모음입니다.`,
-    openGraph: {
-      title: `${creator.name} | Nazo Space`,
-      description: `${creator.name}님이 제작한 나조 모음입니다.`,
-    },
+    title,
+    description,
+    ...shareMeta({
+      title,
+      description,
+      path: `/creator/${id}`,
+      image: nazos.find((n) => n.imageUrl)?.imageUrl,
+      poster: true,
+    }),
   };
 }
 
 export default async function CreatorPage({ params }: CreatorPageProps) {
   const { id } = await params;
-  await connectToDatabase();
-
-  const creator = await Creator.findById(id);
+  const creator = await getCreator(id);
 
   if (!creator) {
     notFound();
   }
 
   // Fetch Nazos created by this creator
-  const createdNazos = await Nazo.find({ creators: id })
-    .sort({ createdAt: -1 }) // Newest first
-    .lean();
+  const createdNazos = await getNazos(id);
 
   // Serializing necessary fields to pass to Client Components if needed, 
   // but Server Components can render them directly. 
