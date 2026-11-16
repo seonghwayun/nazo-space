@@ -47,11 +47,13 @@ test("listDescription names a few nazos and the total", () => {
   assert.match(listDescription("creator", "SCRAP", []), /^SCRAP에서 제작한 나조토키 모음/);
 });
 
-test("shareMeta repeats site fields, falls back to the default image, and uses the small card for posters", () => {
+test("shareMeta repeats site fields and falls back to the default image", () => {
   const plain = shareMeta({ title: "T", description: "D", path: "/tag/1" });
   assert.equal(plain.openGraph.siteName, "Nazo Space");
   assert.equal(plain.openGraph.title, "T | Nazo Space");
   assert.deepEqual(plain.openGraph.images, ["/opengraph-image"]);
   assert.equal(plain.twitter.card, "summary_large_image");
-  assert.equal(shareMeta({ title: "T", description: "D", path: "/", image: "https://x/p.jpg", poster: true }).twitter.card, "summary");
+  const withImage = shareMeta({ title: "T", description: "D", path: "/nazo/1", image: "https://x/p.webp" });
+  assert.deepEqual(withImage.twitter.images, ["https://x/p.webp"]);
+  assert.equal(withImage.twitter.card, "summary_large_image");
 });

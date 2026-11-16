@@ -72,15 +72,13 @@ export interface ShareMetaInput {
   /** e.g. "/nazo/<id>". Left out in the layout, where it would become every page's og:url. */
   path?: string;
   image?: string | null;
-  /** The image is a portrait poster: X's large card would crop it to 2:1, so use the small card. */
-  poster?: boolean;
 }
 
 /**
  * openGraph + twitter for one page. A page that sets `openGraph` replaces the layout's whole
  * object, so siteName / locale / the default image have to be repeated here.
  */
-export function shareMeta({ title, description, path, image, poster = false }: ShareMetaInput) {
+export function shareMeta({ title, description, path, image }: ShareMetaInput) {
   const fullTitle = `${title} | ${SITE_NAME}`;
   const images = image ? [image] : ["/opengraph-image"];
   return {
@@ -94,7 +92,8 @@ export function shareMeta({ title, description, path, image, poster = false }: S
       images,
     },
     twitter: {
-      card: image && poster ? ("summary" as const) : ("summary_large_image" as const),
+      // Nazo images are mostly landscape (sampled 19 of 23), so the large card suits them.
+      card: "summary_large_image" as const,
       title: fullTitle,
       description,
       images,

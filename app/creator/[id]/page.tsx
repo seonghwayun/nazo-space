@@ -48,7 +48,6 @@ export async function generateMetadata({ params }: CreatorPageProps): Promise<Me
       description,
       path: `/creator/${id}`,
       image: nazos.find((n) => n.imageUrl)?.imageUrl,
-      poster: true,
     }),
   };
 }

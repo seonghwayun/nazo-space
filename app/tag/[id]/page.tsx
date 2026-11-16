@@ -44,7 +44,6 @@ export async function generateMetadata({ params }: TagPageProps): Promise<Metada
       description,
       path: `/tag/${id}`,
       image: nazos.find((n) => n.imageUrl)?.imageUrl,
-      poster: true,
     }),
   };
 }

@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title,
     description,
-    ...shareMeta({ title, description, path: `/nazo/${id}`, image: nazo.imageUrl, poster: true }),
+    ...shareMeta({ title, description, path: `/nazo/${id}`, image: nazo.imageUrl }),
   };
 }
 
