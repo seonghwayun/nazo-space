@@ -139,7 +139,10 @@ function SearchContent() {
 
   // Feed State (for empty query) - Now from Context
   const [isFeedLoading, setIsFeedLoading] = React.useState(false);
-  const observerTarget = React.useRef(null);
+  // A next page was asked for and its fetch has not finished yet. Scroll events arrive faster
+  // than the loading state re-renders, so this ref keeps one scroll from asking twice.
+  const loadMorePendingRef = React.useRef(false);
+  const loadMoreRef = React.useRef<() => void>(() => {}); // set below, once the state it reads exists
 
   // Feed Fetch Logic
   // Track the last page we successfully requested to prevent duplicate fetches on tab switch
@@ -153,6 +156,9 @@ function SearchContent() {
 
   const handleScroll = React.useCallback((e: React.UIEvent<HTMLDivElement>) => {
     const scrollTop = e.currentTarget.scrollTop;
+    const el = e.currentTarget;
+    // Ask for the next page a little before the last card scrolls in.
+    if (el.scrollHeight - scrollTop - el.clientHeight <= 400) loadMoreRef.current();
     if (saveScrollTimeoutRef.current) clearTimeout(saveScrollTimeoutRef.current);
     saveScrollTimeoutRef.current = setTimeout(() => {
       sessionStorage.setItem(SEARCH_SCROLL_KEY, scrollTop.toString());
@@ -213,7 +219,10 @@ function SearchContent() {
     } catch (error) {
       console.error("Failed to fetch feed:", error);
     } finally {
-      if (requestId === feedRequestRef.current) setIsFeedLoading(false);
+      if (requestId === feedRequestRef.current) {
+        setIsFeedLoading(false);
+        loadMorePendingRef.current = false;
+      }
     }
   }, [filterQS, setFeedNazos, setFeedHasMore]);
 
@@ -225,6 +234,7 @@ function SearchContent() {
     setFeedNazos([]);
     setFeedPage(1);
     setFeedHasMore(true);
+    loadMorePendingRef.current = false;
     scrollContainerRef.current?.scrollTo({ top: 0 });
   }, [feedKey, setFeedNazos, setFeedPage, setFeedHasMore]);
 
@@ -272,37 +282,37 @@ function SearchContent() {
       if (moreAbortRef.current === controller) {
         moreAbortRef.current = null;
         setIsMoreLoading(false);
+        loadMorePendingRef.current = false;
       }
     }
   }, [debouncedQuery, filterQS, setResults]);
 
 
-  // Observer for Infinite Scroll (Handles both Feed and Search)
-  React.useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          // Case 1: Search Results
-          if (debouncedQuery) {
-            if (searchHasMore[activeTab] && !isMoreLoading && !isLoading) {
-              setSearchPages((prev) => ({ ...prev, [activeTab]: prev[activeTab] + 1 }));
-            }
-          }
-          // Case 2: Feed (No Query)
-          else if (activeTab === "nazo" && feedHasMore && !isFeedLoading) {
-            setFeedPage((prev) => prev + 1);
-          }
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (observerTarget.current) {
-      observer.observe(observerTarget.current);
+  // Infinite scroll (feed and search results). The next page is asked for from the scroll
+  // position the user actually reached, not from an IntersectionObserver: the observer is
+  // re-created after every load and reports the end-of-list marker as visible right away
+  // whenever the browser keeps it on screen (scroll anchoring, iOS momentum / bounce), which
+  // loaded page after page with no further scrolling.
+  loadMoreRef.current = () => {
+    if (loadMorePendingRef.current) return;
+    if (debouncedQuery) {
+      if (searchHasMore[activeTab] && !isMoreLoading && !isLoading) {
+        loadMorePendingRef.current = true;
+        setSearchPages((prev) => ({ ...prev, [activeTab]: prev[activeTab] + 1 }));
+      }
+    } else if (activeTab === "nazo" && feedHasMore && !isFeedLoading && feedNazos.length > 0) {
+      loadMorePendingRef.current = true;
+      setFeedPage((prev) => prev + 1);
     }
+  };
 
-    return () => observer.disconnect();
-  }, [debouncedQuery, activeTab, searchHasMore, isMoreLoading, isLoading, feedHasMore, isFeedLoading]);
+  // A list too short to scroll never fires a scroll event, so fill it up to the screen.
+  React.useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (el && !isFeedLoading && !isMoreLoading && !isLoading && el.scrollHeight <= el.clientHeight) {
+      loadMoreRef.current();
+    }
+  }, [feedNazos.length, results, activeTab, isFeedLoading, isMoreLoading, isLoading]);
 
   // Effect: Trigger Feed Fetch on Page Change
   React.useEffect(() => {
@@ -343,6 +353,7 @@ function SearchContent() {
 
       // Pages of the previous search must not be appended to the new one.
       moreAbortRef.current?.abort();
+      loadMorePendingRef.current = false;
 
       if (!debouncedQuery) {
         setResults({ nazos: [], creators: [], tags: [] });
@@ -557,10 +568,13 @@ function SearchContent() {
       </div>
 
       {/* Scrollable Content Area (Full Width) */}
+      {/* No scroll anchoring: when you are at the very bottom the browser anchors to the
+          infinite-scroll sentinel and, as a page is appended above it, scrolls along to keep
+          it on screen, so every page would immediately request the next one. */}
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto w-full min-h-0"
+        className="flex-1 overflow-y-auto w-full min-h-0 [overflow-anchor:none]"
       >
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 md:px-8 py-6">
           {isSearching ? (
@@ -593,7 +607,6 @@ function SearchContent() {
               )}
 
               {/* Infinite Scroll Anchor */}
-              <div ref={observerTarget} className="h-4 w-full" />
             </div>
           ) : query ? (
             <div className="flex flex-col items-center justify-center h-40 text-center">
@@ -610,7 +623,6 @@ function SearchContent() {
                 </p>
               )}
               {isFeedLoading && <NazoResultsSkeleton layout={layout} />}
-              <div ref={observerTarget} className="h-4 w-full" />
             </div>
           ) : (
             /* Browse every creator / tag */
