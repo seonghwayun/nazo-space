@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import Link from "next/link";
 import { ChevronRight, Grid3x3 } from "lucide-react";
 import { MainLayout } from "@/components/layout/main-layout";
 
-export const metadata: Metadata = { title: "문제 연습" };
+export const metadata: Metadata = pageMeta({
+  title: "나조토키 문제 연습",
+  description: "나조토키에 자주 나오는 유형을 직접 풀어 보며 연습해요.",
+  path: "/practice",
+});
 
 export default function PracticePage() {
   return (

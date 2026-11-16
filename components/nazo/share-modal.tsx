@@ -7,6 +7,21 @@ import { INazo } from "@/models/nazo";
 import { InstagramShareCard } from "./instagram-share-card";
 import { toBlob } from "html-to-image";
 import { FastAverageColor } from 'fast-average-color';
+import { nazoDisplayTitle } from "@/lib/seo";
+
+/** X's post composer with the text and link filled in. */
+function xShareUrl(url: string, nazo?: INazo) {
+  const text = nazo ? `${nazoDisplayTitle(nazo)} #나조토키 #NazoSpace` : "Nazo Space #나조토키";
+  return `https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+}
+
+function XLogo({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="currentColor">
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231 5.45-6.231Zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77Z" />
+    </svg>
+  );
+}
 
 interface ShareModalProps {
   isOpen: boolean;
@@ -275,10 +290,18 @@ export function ShareModal({ isOpen, onClose, url, nazo }: ShareModalProps) {
                   }}
                 >
                   <Share2 className="h-4 w-4" />
-                  <span className="text-xs">X / 카카오 (링크)</span>
+                  <span className="text-xs">다른 앱 (링크)</span>
                 </Button>
               </div>
             )}
+
+            {/* X (Twitter): the post composer opens in a new tab / the X app. */}
+            <Button asChild variant="outline" className="w-full gap-2 h-11">
+              <a href={xShareUrl(url, nazo)} target="_blank" rel="noopener noreferrer">
+                <XLogo className="h-4 w-4" />
+                X에 공유하기
+              </a>
+            </Button>
 
             {/* Standard Link Copy */}
             <div className="flex items-center gap-2">
